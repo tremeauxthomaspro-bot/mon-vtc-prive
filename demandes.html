@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b2b">
+<title>Demandes de réservation — Mon VTC</title>
+<style>
+:root{--navy:#101b2b;--ink:#172231;--muted:#697586;--line:#e4e8ee;--gold:#c9a66d;--bg:#f4f6f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+header{background:linear-gradient(125deg,#101b2b,#263c50);color:white;padding:24px 18px;border-radius:0 0 24px 24px}header .k{font-size:10px;letter-spacing:.2em;color:#d6b987;font-weight:800}h1{font-size:28px;margin:8px 0 5px;letter-spacing:-.04em}header p{font-size:13px;color:#d5dde6;margin:0}
+main{max-width:760px;margin:0 auto;padding:18px 14px 36px}.card,.item{background:white;border:1px solid var(--line);border-radius:17px;padding:17px;margin-bottom:13px;box-shadow:0 4px 15px #17203308}
+h2{font-size:18px;margin:0 0 12px}label{display:block;font-size:12px;font-weight:750;margin:12px 0 6px}input{width:100%;min-height:45px;border:1px solid #d6dde7;border-radius:11px;padding:12px;font:inherit;font-size:16px}
+button{font:inherit;cursor:pointer;border-radius:11px;padding:11px 13px;font-weight:750;border:1px solid var(--line);background:#fff;color:var(--ink)}button.primary{background:var(--navy);color:#fff;border-color:var(--navy)}button.gold{background:#f7f1e5;border-color:#e7d8b8;color:#72572c}button:disabled{opacity:.55}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.muted{font-size:12px;color:var(--muted);line-height:1.5}.status{font-size:13px;line-height:1.5;margin-top:10px;color:#9d2922}.hidden{display:none!important}
+.item-head{display:flex;justify-content:space-between;gap:10px;align-items:start}.item h3{font-size:15px;margin:0 0 6px}.pill{font-size:10px;font-weight:800;border-radius:99px;padding:5px 8px;background:#f4ead5;color:#765a2d;white-space:nowrap}.pill.accepted{background:#e5f6eb;color:#17663b}.pill.rejected{background:#fce8e7;color:#9d2922}.details{font-size:13px;line-height:1.65;margin-top:12px;overflow-wrap:anywhere}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1}.linkbox{background:#f7f5f0;border-left:2px solid var(--gold);padding:12px;margin-top:12px;font-size:12px;overflow-wrap:anywhere}.linkbox a{color:#72572c}.empty{text-align:center;padding:22px;border:1px dashed #cbd5e1;border-radius:14px;color:var(--muted);background:#fff}
+</style></head><body>
+<header><div class="k">MON VTC · ESPACE CHAUFFEUR</div><h1>Demandes de réservation</h1><p>Consultez les demandes reçues et confirmez uniquement les trajets que vous acceptez.</p></header>
+<main>
+<section id="login" class="card"><h2>Connexion chauffeur</h2><p class="muted">Utilise le même compte que pour Mon VTC.</p><form id="loginForm"><label for="email">Adresse e-mail</label><input id="email" type="email" required autocomplete="username"><label for="password">Mot de passe</label><input id="password" type="password" required autocomplete="current-password"><button class="primary" style="width:100%;margin-top:15px">Se connecter</button></form><div id="loginMsg" class="status"></div></section>
+<section id="workspace" class="hidden">
+<div class="card"><div class="item-head"><h2>Mon lien de réservation</h2><button id="logout">Déconnexion</button></div><p class="muted">Complète ton profil une seule fois. Partage ensuite ce lien avec tes clients. Chaque chauffeur dispose de son propre lien et ne voit que ses demandes.</p>
+<form id="profileForm"><div class="row"><div><label for="driverName">Nom affiché</label><input id="driverName" required maxlength="100" placeholder="Ex. Thomas"></div><div><label for="driverSlug">Identifiant du lien</label><input id="driverSlug" required minlength="3" maxlength="50" pattern="[a-z0-9-]+" placeholder="thomas"></div></div><label for="notifyEmail">E-mail de notification</label><input id="notifyEmail" type="email" required placeholder="adresse où recevoir les demandes"><button class="primary" style="width:100%">Enregistrer mon profil</button></form><div id="profileMsg" class="status"></div><div id="linkBox" class="linkbox hidden"></div></div>
+<div class="item-head" style="padding:4px 2px 10px"><h2>Mes demandes</h2><button id="refresh" class="gold">Actualiser</button></div><div id="bookingList"><div class="empty">Chargement…</div></div><div id="pageMsg" class="status"></div>
+</section>
+<p class="muted" style="text-align:center">Mon VTC · Les demandes restent en attente jusqu’à votre décision.</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const URL="https://dvdbzaneegpgolvioybh.supabase.co";
+const KEY="sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY";
+const sb=window.supabase.createClient(URL,KEY);
+let session=null,driver=null;
+const $=id=>document.getElementById(id);
+function msg(id,s){$(id).textContent=s||""}
+function showWorkspace(){ $("login").classList.add("hidden");$("workspace").classList.remove("hidden") }
+function showLogin(message=""){ $("workspace").classList.add("hidden");$("login").classList.remove("hidden");msg("loginMsg",message) }
+function linkUrl(){return location.origin+location.pathname.replace(/[^/]*$/,"")+"reservation.html?chauffeur="+encodeURIComponent(driver.slug)}
+function showLink(){if(!driver)return;$("linkBox").classList.remove("hidden");$("linkBox").innerHTML='Votre lien client : <br><a href="'+linkUrl()+'">'+linkUrl()+'</a><br><button type="button" id="copyLink" style="margin-top:8px">Copier le lien</button>'; $("copyLink").onclick=async()=>{try{await navigator.clipboard.writeText(linkUrl());msg("profileMsg","Lien copié !")}catch{msg("profileMsg",linkUrl())}}}
+async function loadProfile(){
+ const {data,error}=await sb.from("vtc_drivers").select("*").eq("user_id",session.user.id).maybeSingle();
+ if(error){msg("profileMsg","Impossible de charger le profil.");return}
+ driver=data||null;
+ if(driver){$("driverName").value=driver.display_name;$("driverSlug").value=driver.slug;$("notifyEmail").value=driver.notification_email;showLink();await loadBookings()}
+ else{$("bookingList").innerHTML='<div class="empty">Enregistre ton profil pour activer ton lien de réservation.</div>';$("linkBox").classList.add("hidden")}
+}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){msg("loginMsg","Connexion impossible. Vérifie tes identifiants.");return}session=data.session;showWorkspace();await loadProfile()});
+$("logout").onclick=async()=>{await sb.auth.signOut();session=null;driver=null;showLogin()};
+$("profileForm").addEventListener("submit",async e=>{
+ e.preventDefault();if(!session)return;
+ const payload={user_id:session.user.id,display_name:$("driverName").value.trim(),slug:$("driverSlug").value.trim().toLowerCase(),notification_email:$("notifyEmail").value.trim(),active:true};
+ msg("profileMsg","Enregistrement…");
+ const result=driver?await sb.from("vtc_drivers").update({display_name:payload.display_name,slug:payload.slug,notification_email:payload.notification_email,active:true}).eq("user_id",session.user.id).select().single():await sb.from("vtc_drivers").insert(payload).select().single();
+ if(result.error){msg("profileMsg",result.error.message.includes("duplicate")?"Cet identifiant est déjà utilisé. Choisis-en un autre.":"Enregistrement impossible. Vérifie les informations et réessaie.");return}
+ driver=result.data;msg("profileMsg","Profil enregistré.");showLink();await loadBookings()
+});
+function dateLabel(date,time){const d=new Date(date+"T12:00:00");return d.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"long",year:"numeric"})+" à "+String(time).slice(0,5)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+async function setStatus(id,status){
+ const {error}=await sb.from("vtc_booking_requests").update({status}).eq("id",id);
+ if(error){msg("pageMsg","Impossible de mettre à jour la demande.");return}
+ msg("pageMsg",status==="accepted"?"Course acceptée. Elle est maintenant confirmée.":"Demande refusée.");await loadBookings()
+}
+async function loadBookings(){
+ if(!driver)return;
+ $("bookingList").innerHTML='<div class="empty">Chargement…</div>';
+ const {data,error}=await sb.from("vtc_booking_requests").select("*").eq("driver_id",driver.id).order("pickup_date",{ascending:true}).order("pickup_time",{ascending:true});
+ if(error){$("bookingList").innerHTML='<div class="empty">Impossible de charger les demandes. Vérifie la connexion.</div>';return}
+ if(!data||!data.length){$("bookingList").innerHTML='<div class="empty">Aucune demande pour le moment. Ton lien client est prêt à être partagé.</div>';return}
+ $("bookingList").innerHTML=data.map(b=>'<article class="card"><div class="item-head"><div><h3>'+esc(b.client_name)+'</h3><div class="muted">'+esc(dateLabel(b.pickup_date,b.pickup_time))+'</div></div><span class="pill '+esc(b.status)+'">'+(b.status==="pending"?"En attente":b.status==="accepted"?"Acceptée":"Refusée")+'</span></div><div class="details"><b>Départ :</b> '+esc(b.pickup_address)+'<br><b>Destination :</b> '+esc(b.destination_address)+'<br><b>Téléphone :</b> '+esc(b.client_phone)+(b.client_email?'<br><b>E-mail :</b> '+esc(b.client_email):'')+'<br><b>Passagers :</b> '+b.passengers+(b.client_message?'<br><b>Précisions :</b> '+esc(b.client_message):'')+'</div>'+(b.status==="pending"?'<div class="actions"><button class="primary" data-accept="'+b.id+'">Accepter la course</button><button data-reject="'+b.id+'">Refuser</button></div>':'')+'</article>').join("");
+ document.querySelectorAll("[data-accept]").forEach(b=>b.onclick=()=>setStatus(b.dataset.accept,"accepted"));
+ document.querySelectorAll("[data-reject]").forEach(b=>b.onclick=()=>{if(confirm("Refuser cette demande ?"))setStatus(b.dataset.reject,"rejected")});
+}
+$("refresh").onclick=loadBookings;
+(async()=>{const {data}=await sb.auth.getSession();if(data.session){session=data.session;showWorkspace();await loadProfile()}else showLogin()})();
+</script></body></html>
