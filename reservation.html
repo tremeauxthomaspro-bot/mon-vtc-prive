@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101b2b">
+<meta name="description" content="Demandez votre trajet avec votre chauffeur privé.">
+<title>Réserver un trajet — Mon VTC</title>
+<style>
+:root{--navy:#101b2b;--ink:#172231;--muted:#697586;--line:#e4e8ee;--gold:#c9a66d;--bg:#f4f6f8}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top left,#e9edf2 0,transparent 42%),var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);padding:0 0 32px}
+.hero{background:linear-gradient(125deg,#101b2b,#1c3046 70%,#263c50);color:#fff;padding:28px 20px 32px;border-radius:0 0 28px 28px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:210px;height:210px;border:1px solid #c9a66d55;border-radius:50%;right:-90px;top:-100px;box-shadow:0 0 0 20px #c9a66d0e,0 0 0 44px #c9a66d0a;pointer-events:none}
+.brand{font-size:11px;letter-spacing:.22em;color:#d6b987;font-weight:800;text-transform:uppercase}
+h1{font-size:clamp(27px,6vw,36px);letter-spacing:-.045em;line-height:1.08;margin:14px 0 10px;max-width:550px}
+.hero p{margin:0;color:#d5dde6;font-size:14px;line-height:1.55;max-width:520px}
+main{max-width:680px;margin:0 auto;padding:20px 15px}
+.card{background:white;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 8px 28px #17203309}
+.intro{margin-bottom:16px}.intro h2{font-size:18px;margin:0 0 7px;letter-spacing:-.025em}.intro p{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+label{display:block;font-size:12px;font-weight:750;margin:13px 0 6px}
+input,textarea,select{width:100%;min-height:46px;padding:12px;border:1px solid #d6dde7;border-radius:11px;background:#fff;font:inherit;font-size:16px;color:var(--ink)}
+textarea{min-height:82px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid #c9a66d80;border-color:#b68a4a}
+.full{grid-column:1/-1}
+button{width:100%;border:0;border-radius:12px;background:var(--navy);color:#fff;padding:15px;font-size:15px;font-weight:800;margin-top:18px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.small{font-size:11px;color:var(--muted);line-height:1.5;margin:12px 0 0}
+.status{display:none;padding:13px 14px;border-radius:12px;margin-top:14px;font-size:13px;line-height:1.5}
+.status.ok{display:block;background:#edf8f1;border:1px solid #b9e3c7;color:#17663b}
+.status.err{display:block;background:#fff1f0;border:1px solid #f2c3bf;color:#9d2922}
+.trap{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+footer{text-align:center;color:#8a93a0;font-size:11px;margin:18px 10px 0}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.card{padding:17px}.hero{padding:25px 18px 28px}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="brand">Mon VTC · Chauffeur privé</div>
+  <h1>Votre trajet, en toute sérénité.</h1>
+  <p>Envoyez votre demande de réservation. Votre trajet sera confirmé uniquement après validation par le chauffeur.</p>
+</header>
+<main>
+  <section class="card">
+    <div class="intro">
+      <h2>Demander une réservation</h2>
+      <p id="driverLine">Préparez votre trajet en quelques instants.</p>
+    </div>
+    <form id="bookingForm">
+      <label class="trap" aria-hidden="true">Ne pas remplir<input name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="grid">
+        <div class="full"><label for="client_name">Nom et prénom *</label><input id="client_name" name="client_name" required maxlength="120" autocomplete="name" placeholder="Votre nom"></div>
+        <div><label for="client_phone">Téléphone *</label><input id="client_phone" name="client_phone" type="tel" required maxlength="40" autocomplete="tel" placeholder="06 00 00 00 00"></div>
+        <div><label for="client_email">E-mail</label><input id="client_email" name="client_email" type="email" maxlength="254" autocomplete="email" placeholder="vous@exemple.fr"></div>
+        <div class="full"><label for="pickup_address">Adresse de prise en charge *</label><input id="pickup_address" name="pickup_address" required maxlength="500" autocomplete="street-address" placeholder="Adresse complète, ville"></div>
+        <div class="full"><label for="destination_address">Destination *</label><input id="destination_address" name="destination_address" required maxlength="500" placeholder="Adresse d'arrivée, ville"></div>
+        <div><label for="pickup_date">Date du trajet *</label><input id="pickup_date" name="pickup_date" type="date" required></div>
+        <div><label for="pickup_time">Heure de prise en charge *</label><input id="pickup_time" name="pickup_time" type="time" required></div>
+        <div class="full"><label for="passengers">Nombre de passagers *</label><select id="passengers" name="passengers"><option value="1">1 passager</option><option value="2">2 passagers</option><option value="3">3 passagers</option><option value="4">4 passagers</option><option value="5">5 passagers</option><option value="6">6 passagers</option><option value="7">7 passagers</option><option value="8">8 passagers</option></select></div>
+        <div class="full"><label for="client_message">Précisions (facultatif)</label><textarea id="client_message" name="client_message" maxlength="1500" placeholder="Bagages, siège enfant, numéro de vol…"></textarea></div>
+      </div>
+      <button id="submitButton" type="submit">Envoyer ma demande</button>
+      <p class="small">L'envoi de cette demande ne vaut pas confirmation de réservation. Le chauffeur vous recontactera pour confirmer le trajet.</p>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </form>
+  </section>
+  <footer>Service de réservation · Mon VTC</footer>
+</main>
+<script>
+const SUPABASE_URL = "https://dvdbzaneegpgolvioybh.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY";
+const params = new URLSearchParams(location.search);
+const slug = (params.get("chauffeur") || "").trim().toLowerCase();
+const form = document.getElementById("bookingForm");
+const button = document.getElementById("submitButton");
+const statusBox = document.getElementById("status");
+const dateInput = document.getElementById("pickup_date");
+const today = new Date();
+dateInput.min = new Date(today.getTime() - today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+
+if (!slug || !/^[a-z0-9-]{3,50}$/.test(slug)) {
+  document.getElementById("driverLine").textContent = "Le lien de réservation est incomplet. Merci d'utiliser le lien transmis par votre chauffeur.";
+  button.disabled = true;
+}
+function showStatus(message, type) {
+  statusBox.textContent = message;
+  statusBox.className = "status " + type;
+}
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!slug) return;
+  if (dateInput.value < dateInput.min) {
+    showStatus("Choisissez une date à partir d'aujourd'hui.", "err");
+    return;
+  }
+  button.disabled = true;
+  button.textContent = "Envoi en cours…";
+  statusBox.className = "status";
+  const fd = new FormData(form);
+  const payload = Object.fromEntries(fd.entries());
+  payload.slug = slug;
+  payload.passengers = Number(payload.passengers);
+  try {
+    const response = await fetch(SUPABASE_URL + "/functions/v1/submit-vtc-booking", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_PUBLISHABLE_KEY
+      },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) throw new Error(result.error || "L'envoi a échoué. Réessayez.");
+    form.reset();
+    dateInput.min = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+    showStatus("Votre demande a bien été envoyée. Elle reste en attente jusqu'à confirmation du chauffeur.", "ok");
+  } catch (error) {
+    showStatus(error.message || "Impossible d'envoyer la demande pour le moment.", "err");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Envoyer ma demande";
+  }
+});
+</script>
+</body>
+</html>
