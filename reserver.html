@@ -24,6 +24,7 @@
 <label for="pickup_address">Adresse de départ <span class="required">*</span></label><input id="pickup_address" name="pickup_address" autocomplete="street-address" maxlength="500" required placeholder="Adresse complète, gare ou aéroport">
 <label for="destination_address">Destination <span class="required">*</span></label><input id="destination_address" name="destination_address" maxlength="500" required placeholder="Où souhaitez-vous aller ?">
 <div class="distance-notice"><strong>Trajets de plus de 100 km</strong><br>Pour toute demande de trajet supérieur à 100 km, une réponse vous sera adressée par téléphone ou par e-mail afin de confirmer les modalités de votre réservation.</div>
+<div id="routeEstimate" class="notice" aria-live="polite">Le tarif estimé s’affichera lorsque tu auras renseigné le départ et la destination.</div>
 <div class="grid">
 <div><label for="pickup_date">Date <span class="required">*</span></label><input id="pickup_date" name="pickup_date" type="date" required></div>
 <div><label for="pickup_time">Heure <span class="required">*</span></label><input id="pickup_time" name="pickup_time" type="time" required></div>
@@ -45,6 +46,25 @@ const DRIVER_SLUG='aubrac-vtc';
 const form=document.getElementById('bookingForm');
 const statusEl=document.getElementById('status');
 const submitButton=document.getElementById('submitButton');
+const pickupInput=document.getElementById('pickup_address');
+const destinationInput=document.getElementById('destination_address');
+const routeEstimate=document.getElementById('routeEstimate');
+let latestRoute=null;
+let routeTimer=null;
+async function calculateRoute(){
+ const pickup=pickupInput.value.trim(),destination=destinationInput.value.trim();latestRoute=null;
+ if(pickup.length<4||destination.length<4){routeEstimate.textContent="Le tarif estimé s’affichera lorsque tu auras renseigné le départ et la destination.";return;}
+ routeEstimate.textContent="Calcul de la distance par la route…";
+ try{
+  const response=await fetch(SUPABASE_URL+"/functions/v1/calculate-vtc-route",{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY},body:JSON.stringify({pickup_address:pickup,destination_address:destination})});
+  const result=await response.json();if(!response.ok||result.error)throw new Error(result.error||"Calcul indisponible.");
+  latestRoute=result;
+  if(result.requires_manual_confirmation){routeEstimate.innerHTML="<strong>Distance estimée : "+result.distance_km+" km</strong><br>Pour ce trajet de plus de 100 km, le tarif et les modalités seront confirmés par téléphone ou par e-mail."}
+  else{routeEstimate.innerHTML="<strong>Distance routière estimée : "+result.distance_km+" km</strong><br><strong>Tarif estimé : "+Number(result.estimated_price).toLocaleString("fr-FR",{style:"currency",currency:"EUR"})+"</strong><br><span>Le prix définitif sera confirmé par le chauffeur.</span>"}
+ }catch(err){routeEstimate.textContent=(err.message||"Calcul indisponible.")+" Tu peux quand même envoyer ta demande."}
+}
+[pickupInput,destinationInput].forEach(el=>el.addEventListener("change",calculateRoute));
+[pickupInput,destinationInput].forEach(el=>el.addEventListener("blur",()=>{clearTimeout(routeTimer);routeTimer=setTimeout(calculateRoute,250)}));
 const dateInput=document.getElementById('pickup_date');
 const localToday=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
 dateInput.min=localToday();
