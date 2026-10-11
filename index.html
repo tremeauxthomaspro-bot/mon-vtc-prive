@@ -92,7 +92,8 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <h2>Créer un document</h2>
 <div class="card no-print">
 <label for="docType">Type de document</label><select id="docType"><option value="reservation">Bon de réservation VTC</option><option value="quote">Devis</option><option value="invoice">Facture</option></select>
-<div class="row"><div><label for="docClient">Client enregistré</label><select id="docClient"><option value="">Choisir un client…</option></select></div><div><label for="docDate">Date du document</label><input id="docDate" type="date" required></div></div>
+<div class="row"><div><label for="docClient">Client enregistré</label><select id="docClient"><option value="">Choisir un client…</option></select></div><div><label for="docDate">Date d’émission</label><input id="docDate" type="date" required></div></div>
+<div class="row"><div><label for="serviceDate">Date de prestation</label><input id="serviceDate" type="date"></div><div><label for="docBuyerId">N° TVA intracommunautaire du client (si applicable)</label><input id="docBuyerId"></div></div>
 <div id="reservationFields">
 <div class="row"><div><label for="bookedAt">Date/heure de réservation</label><input id="bookedAt" type="datetime-local"></div><div><label for="pickupAt">Prise en charge souhaitée</label><input id="pickupAt" type="datetime-local"></div></div>
 <div class="row"><div><label for="pickupPlace">Lieu de prise en charge</label><input id="pickupPlace" placeholder="Adresse complète" /></div><div><label for="dropPlace">Destination (facultatif)</label><input id="dropPlace" placeholder="Adresse / ville" /></div></div>
@@ -120,7 +121,9 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <div class="row"><div><label for="bizSiren">SIREN (9 chiffres)</label><input id="bizSiren" inputmode="numeric" maxlength="9"></div><div><label for="bizRevtc">N° d’inscription REVTC</label><input id="bizRevtc"></div></div>
 <div class="row"><div><label for="bizVehicle">Immatriculation du véhicule</label><input id="bizVehicle" placeholder="AA-123-AA"></div><div><label for="bizVat">N° TVA intracommunautaire (si applicable)</label><input id="bizVat"></div></div>
 <label for="bizVatNote">Mention TVA / régime fiscal à afficher</label><input id="bizVatNote" placeholder="Ex. TVA non applicable, article 293 B du CGI (uniquement si applicable)">
-<label for="bizPaymentTerms">Conditions de paiement / retard</label><textarea id="bizPaymentTerms" placeholder="Conditions applicables selon ta situation…"></textarea>
+<label for="bizNoDiscount">Escompte pour paiement anticipé</label><select id="bizNoDiscount"><option value="">À préciser</option><option value="none">Aucun escompte en cas de paiement anticipé</option><option value="custom">Selon conditions convenues</option></select>
+<div class="row"><div><label for="bizLateRate">Taux des pénalités de retard (clients professionnels)</label><input id="bizLateRate" placeholder="Taux applicable à vérifier"></div><div><label for="bizPaymentDays">Délai de paiement (jours)</label><input id="bizPaymentDays" type="number" min="0" max="60" placeholder="Ex. paiement comptant"></div></div>
+<label for="bizPaymentTerms">Conditions de paiement complémentaires</label><textarea id="bizPaymentTerms" placeholder="Conditions adaptées à ton activité et à ta clientèle…"></textarea>
 <button class="primary">Enregistrer mes informations</button>
 </form>
 <div class="card"><p class="note"><strong>Important :</strong> l’application aide à préparer les documents mais ne garantit pas à elle seule leur conformité légale. Vérifie les mentions obligatoires selon ton statut, ta TVA, le client et la prestation. Pour les factures, conserve une numérotation chronologique continue et ne réutilise jamais un numéro déjà émis.</p></div>
@@ -165,7 +168,7 @@ period.addEventListener('change',render);
 rideForm.addEventListener('submit',e=>{e.preventDefault();db.rides.push({id:uid(),date:rideDate.value,minutes:Number(rideDuration.value),clientId:rideClient.value,name:rideName.value.trim(),from:rideFrom.value.trim(),to:rideTo.value.trim(),price:Number(ridePrice.value),payment:ridePayment.value,notes:rideNotes.value.trim()});e.target.reset();rideDate.value=today();save();showTab('rides')});
 expenseForm.addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:uid(),date:expenseDate.value,amount:Number(expenseAmount.value),category:expenseCategory.value,description:expenseDescription.value.trim()});e.target.reset();expenseDate.value=today();save();showTab('expenses')});
 clientForm.addEventListener('submit',e=>{e.preventDefault();db.clients.push({id:uid(),name:clientName.value.trim(),phone:clientPhone.value.trim(),email:clientEmail.value.trim(),address:clientAddress.value.trim(),notes:clientNotes.value.trim()});e.target.reset();save();showTab('clients')});
-const settingIds=['bizName','bizAddress','bizPhone','bizEmail','bizSiren','bizRevtc','bizVehicle','bizVat','bizVatNote','bizPaymentTerms'];
+const settingIds=['bizName','bizAddress','bizPhone','bizEmail','bizSiren','bizRevtc','bizVehicle','bizVat','bizVatNote','bizPaymentTerms','bizNoDiscount','bizLateRate','bizPaymentDays'];
 function loadSettings(){settingIds.forEach(id=>document.getElementById(id).value=db.settings[id]||'')}
 loadSettings();
 settingsForm.addEventListener('submit',e=>{e.preventDefault();settingIds.forEach(id=>db.settings[id]=document.getElementById(id).value.trim());save();alert('Informations professionnelles enregistrées.')});
