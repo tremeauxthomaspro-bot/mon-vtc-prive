@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Mon VTC — privé</title>
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--ink:#172033;--muted:#657087;--line:#e3e8ef;--navy:#172033;--accent:#0f766e;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);padding-bottom:32px}
+header{background:var(--navy);color:white;padding:24px 18px 20px;border-radius:0 0 22px 22px}
+header .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.72}h1{margin:6px 0 4px;font-size:26px}header p{margin:0;color:#d5dbe6;font-size:14px}
+main{max-width:850px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:8px;overflow:auto;margin:0 0 16px;padding-bottom:2px}
+.tab{border:1px solid var(--line);background:white;border-radius:12px;padding:10px 13px;font-weight:650;white-space:nowrap;color:var(--ink)}
+.tab.active{background:var(--navy);color:white;border-color:var(--navy)}
+.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.metric,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px #17203308}
+.metric span{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}.metric strong{font-size:21px;letter-spacing:-.03em}.metric small{display:block;margin-top:5px;color:var(--muted);font-size:11px}
+h2{font-size:18px;margin:4px 0 12px}h3{font-size:15px;margin:0 0 12px}
+label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #d6dde7;border-radius:10px;background:#fff;font:inherit;font-size:16px;color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font:inherit;cursor:pointer}.primary{width:100%;background:var(--accent);color:white;border:0;border-radius:12px;padding:13px 15px;font-weight:750;margin-top:14px}
+.secondary{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-weight:650}
+.danger{color:var(--danger);border-color:#f1c7c4}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px}
+.item-top{display:flex;justify-content:space-between;gap:10px;align-items:start}.item strong{font-size:14px}.muted{color:var(--muted);font-size:12px;line-height:1.45}.amount{font-weight:800;white-space:nowrap}
+.item-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.empty{padding:20px;text-align:center;color:var(--muted);background:#fff;border:1px dashed #cbd5e1;border-radius:13px;font-size:14px}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+.doc-preview{background:white;border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:12px}
+.doc-preview h2{text-align:center;margin:4px 0 20px;text-transform:uppercase;letter-spacing:.05em}
+.doc-head{display:grid;grid-template-columns:1fr 1fr;gap:14px}.doc-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px}.doc-table th,.doc-table td{border-bottom:1px solid #d9dee7;padding:9px 6px;text-align:left}.doc-table th:last-child,.doc-table td:last-child{text-align:right}
+.doc-total{text-align:right;font-size:17px;font-weight:800;margin-top:15px}.doc-actions{display:flex;gap:8px;flex-wrap:wrap}.doc-actions button{flex:1}
+@media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}main{padding:22px}}
+@media print{body{background:white;padding:0}header,.tabs,main>.panel:not(.active),.no-print,.doc-actions{display:none!important}main{max-width:none;padding:0}.panel.active{display:block!important}.panel.active>*:not(.print-area){display:none!important}.print-area{display:block!important}.doc-preview{border:0;padding:0;margin:0}.doc-preview h2{font-size:22px}.doc-head{grid-template-columns:1fr 1fr}.doc-table th,.doc-table td{border-bottom:1px solid #bbb}.print-note{display:block!important}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">Tableau de bord personnel</div><h1>Mon VTC</h1><p>Courses privées · documents · recettes · dépenses</p></header>
+<main>
+<div class="tabs no-print" role="tablist">
+<button class="tab active" data-tab="home">Résumé</button><button class="tab" data-tab="rides">Courses</button><button class="tab" data-tab="expenses">Dépenses</button><button class="tab" data-tab="clients">Clients</button><button class="tab" data-tab="documents">Documents</button><button class="tab" data-tab="settings">Mon entreprise</button><button class="tab" data-tab="backup">Sauvegarde</button>
+</div>
+<section class="panel active" id="home">
+<h2>Mon activité</h2>
+<div class="card"><label for="period">Période des indicateurs</label><select id="period"><option value="month">Ce mois-ci</option><option value="week">Cette semaine</option><option value="year">Cette année</option><option value="all">Depuis le début</option></select></div>
+<div class="grid">
+<div class="metric"><span>Chiffre d’affaires</span><strong id="kpiRevenue">0,00 €</strong><small>Courses enregistrées</small></div>
+<div class="metric"><span>Dépenses</span><strong id="kpiExpenses">0,00 €</strong><small>Frais saisis</small></div>
+<div class="metric"><span>Reste après dépenses</span><strong id="kpiNet">0,00 €</strong><small>Avant cotisations et impôts</small></div>
+<div class="metric"><span>Heures travaillées</span><strong id="kpiHours">0 h</strong><small>Durée saisie des courses</small></div>
+<div class="metric"><span>CA par heure</span><strong id="kpiHourly">0,00 €</strong><small>CA ÷ heures enregistrées</small></div>
+<div class="metric"><span>Courses</span><strong id="kpiCount">0</strong><small>Courses dans la période</small></div>
+</div>
+<div class="card"><h3>À savoir</h3><p class="note">Les chiffres sont calculés uniquement à partir des éléments saisis ici. Le « reste » ne déduit pas les cotisations URSSAF, impôts ou frais non enregistrés. Les données restent dans le stockage du navigateur sur cet appareil.</p></div>
+</section>
+<section class="panel" id="rides">
+<h2>Ajouter une course</h2>
+<form id="rideForm" class="card">
+<div class="row"><div><label for="rideDate">Date</label><input id="rideDate" type="date" required></div><div><label for="rideDuration">Durée (minutes)</label><input id="rideDuration" type="number" min="0" step="5" placeholder="45" required></div></div>
+<label for="rideClient">Client</label><select id="rideClient"><option value="">Client non enregistré</option></select>
+<label for="rideName">Nom / référence (facultatif)</label><input id="rideName" placeholder="Ex. Mme Martin, gare…">
+<div class="row"><div><label for="rideFrom">Départ</label><input id="rideFrom" placeholder="Adresse / ville"></div><div><label for="rideTo">Arrivée</label><input id="rideTo" placeholder="Adresse / ville"></div></div>
+<div class="row"><div><label for="ridePrice">Prix encaissé (€)</label><input id="ridePrice" type="number" min="0" step="0.01" placeholder="35,00" required></div><div><label for="ridePayment">Paiement</label><select id="ridePayment"><option>Virement</option><option>Espèces</option><option>Carte</option><option>Autre</option></select></div></div>
+<label for="rideNotes">Notes (facultatif)</label><textarea id="rideNotes" placeholder="Informations utiles…"></textarea><button class="primary">Enregistrer la course</button>
+</form><h2>Historique des courses</h2><div id="rideList" class="list"></div>
+</section>
+<section class="panel" id="expenses">
+<h2>Ajouter une dépense</h2>
+<form id="expenseForm" class="card">
+<div class="row"><div><label for="expenseDate">Date</label><input id="expenseDate" type="date" required></div><div><label for="expenseAmount">Montant (€)</label><input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="12,50"></div></div>
+<label for="expenseCategory">Catégorie</label><select id="expenseCategory"><option>Recharge / carburant</option><option>Péage / parking</option><option>Entretien / réparation</option><option>Assurance</option><option>Téléphone / abonnement</option><option>Nettoyage</option><option>Autre</option></select>
+<label for="expenseDescription">Description</label><input id="expenseDescription" placeholder="Ex. recharge du 11 octobre" required><button class="primary">Enregistrer la dépense</button>
+</form><h2>Historique des dépenses</h2><div id="expenseList" class="list"></div>
+</section>
+<section class="panel" id="clients">
+<h2>Ajouter un client</h2>
+<form id="clientForm" class="card">
+<label for="clientName">Nom du client</label><input id="clientName" required placeholder="Nom / entreprise">
+<div class="row"><div><label for="clientPhone">Téléphone</label><input id="clientPhone" type="tel" placeholder="06…"></div><div><label for="clientEmail">E-mail</label><input id="clientEmail" type="email" placeholder="nom@exemple.fr"></div></div>
+<label for="clientAddress">Adresse de facturation (facultatif)</label><input id="clientAddress" placeholder="Adresse, code postal, ville">
+<label for="clientNotes">Notes (facultatif)</label><textarea id="clientNotes" placeholder="Préférences, adresse habituelle…"></textarea><button class="primary">Enregistrer le client</button>
+</form><h2>Mes clients</h2><div id="clientList" class="list"></div>
+</section>
+<section class="panel" id="documents">
+<h2>Créer un document</h2>
+<div class="card no-print">
+<label for="docType">Type de document</label><select id="docType"><option value="reservation">Bon de réservation VTC</option><option value="quote">Devis</option><option value="invoice">Facture</option></select>
+<div class="row"><div><label for="docClient">Client enregistré</label><select id="docClient"><option value="">Choisir un client…</option></select></div><div><label for="docDate">Date du document</label><input id="docDate" type="date" required></div></div>
+<div id="reservationFields">
+<div class="row"><div><label for="bookedAt">Date/heure de réservation</label><input id="bookedAt" type="datetime-local"></div><div><label for="pickupAt">Prise en charge souhaitée</label><input id="pickupAt" type="datetime-local"></div></div>
+<div class="row"><div><label for="pickupPlace">Lieu de prise en charge</label><input id="pickupPlace" placeholder="Adresse complète" /></div><div><label for="dropPlace">Destination (facultatif)</label><input id="dropPlace" placeholder="Adresse / ville" /></div></div>
+</div>
+<div id="commercialFields">
+<label for="docTitle">Objet / prestation</label><input id="docTitle" placeholder="Ex. Mise à disposition / trajet privé">
+<div class="row"><div><label for="docQty">Quantité</label><input id="docQty" type="number" min="1" step="1" value="1"></div><div><label for="docPrice">Prix unitaire (€)</label><input id="docPrice" type="number" min="0" step="0.01" placeholder="50,00"></div></div>
+<label for="docDetails">Détail / conditions</label><textarea id="docDetails" placeholder="Détail de la prestation, attente, bagages, conditions…"></textarea>
+<div class="row"><div><label for="docVat">TVA applicable (%)</label><input id="docVat" type="number" min="0" max="100" step="0.1" value="0"></div><div><label for="docDue">Échéance (facture)</label><input id="docDue" type="date"></div></div>
+<p class="note">Renseigne le taux de TVA correspondant à ta situation. Ne laisse pas 0 % si ce n’est pas le bon traitement fiscal.</p>
+</div>
+<div class="row"><div><label for="docRef">Référence (facultatif)</label><input id="docRef" placeholder="Référence client / commande"></div><div><label for="docPayment">Mode de paiement</label><select id="docPayment"><option>Virement</option><option>Carte bancaire</option><option>Espèces</option><option>Autre</option></select></div></div>
+<button id="makeDoc" class="primary">Générer le document</button>
+</div>
+<div id="documentResult" class="print-area"></div>
+<h2 class="no-print">Documents enregistrés</h2><div id="documentList" class="list no-print"></div>
+</section>
+<section class="panel" id="settings">
+<h2>Mes informations professionnelles</h2>
+<form id="settingsForm" class="card">
+<p class="note">Ces informations apparaîtront sur les bons de réservation, devis et factures. Complète-les avec tes informations exactes.</p>
+<label for="bizName">Nom / dénomination sociale</label><input id="bizName" placeholder="Nom et prénom ou entreprise" required>
+<label for="bizAddress">Adresse professionnelle</label><input id="bizAddress" placeholder="Adresse, code postal, ville">
+<div class="row"><div><label for="bizPhone">Téléphone</label><input id="bizPhone" type="tel"></div><div><label for="bizEmail">E-mail</label><input id="bizEmail" type="email"></div></div>
+<div class="row"><div><label for="bizSiren">SIREN (9 chiffres)</label><input id="bizSiren" inputmode="numeric" maxlength="9"></div><div><label for="bizRevtc">N° d’inscription REVTC</label><input id="bizRevtc"></div></div>
+<div class="row"><div><label for="bizVehicle">Immatriculation du véhicule</label><input id="bizVehicle" placeholder="AA-123-AA"></div><div><label for="bizVat">N° TVA intracommunautaire (si applicable)</label><input id="bizVat"></div></div>
+<label for="bizVatNote">Mention TVA / régime fiscal à afficher</label><input id="bizVatNote" placeholder="Ex. TVA non applicable, article 293 B du CGI (uniquement si applicable)">
+<label for="bizPaymentTerms">Conditions de paiement / retard</label><textarea id="bizPaymentTerms" placeholder="Conditions applicables selon ta situation…"></textarea>
+<button class="primary">Enregistrer mes informations</button>
+</form>
+<div class="card"><p class="note"><strong>Important :</strong> l’application aide à préparer les documents mais ne garantit pas à elle seule leur conformité légale. Vérifie les mentions obligatoires selon ton statut, ta TVA, le client et la prestation. Pour les factures, conserve une numérotation chronologique continue et ne réutilise jamais un numéro déjà émis.</p></div>
+</section>
+<section class="panel" id="backup">
+<h2>Sauvegarde et export</h2>
+<div class="card"><h3>Sauvegarder toutes les données</h3><p class="note">Télécharge un fichier JSON contenant les informations professionnelles, clients, courses, dépenses et documents. Protège ce fichier car il peut contenir des données personnelles.</p><button id="exportJson" class="primary">Exporter la sauvegarde complète</button></div>
+<div class="card"><h3>Restaurer une sauvegarde</h3><p class="note">Le fichier importé remplacera les données actuellement présentes.</p><input type="file" id="importFile" accept=".json,application/json"><button id="importJson" class="primary">Restaurer cette sauvegarde</button></div>
+<div class="card"><h3>Exporter les tableaux en CSV</h3><button id="exportRidesCsv" class="secondary">Exporter les courses</button> <button id="exportExpensesCsv" class="secondary">Exporter les dépenses</button></div>
+<div class="card"><h3>Effacer les données</h3><button id="clearAll" class="secondary danger">Tout effacer</button></div>
+<div class="card"><p class="note"><strong>Confidentialité :</strong> l’application n’envoie pas volontairement tes données à un serveur. Elles restent dans le stockage local du navigateur sur cet appareil. Elles ne sont pas automatiquement synchronisées. Fais régulièrement une sauvegarde. Le site public contient le code de l’application, pas tes données enregistrées.</p></div>
+</section>
+</main>
+<script>
+const KEY='monVtcDataV2';const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const blank=()=>({clients:[],rides:[],expenses:[],documents:[],settings:{},counters:{reservation:0,quote:0,invoice:0}});
+let db;try{db=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){db=blank()}
+db.clients ||= [];db.rides ||= [];db.expenses ||= [];db.documents ||= [];db.settings ||= {};db.counters ||= {reservation:0,quote:0,invoice:0};
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function money(n){return (Number(n)||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmtDate(s){if(!s)return '';const p=s.slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s}
+function fmtDateTime(s){if(!s)return '';return fmtDate(s)+' '+(s.includes('T')?s.slice(11,16):'')}
+function inPeriod(date,period){if(period==='all')return true;const d=new Date(date+'T12:00:00'),n=new Date();if(Number.isNaN(+d))return false;if(period==='year')return d.getFullYear()===n.getFullYear();if(period==='month')return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();const start=new Date(n);const day=(n.getDay()+6)%7;start.setDate(n.getDate()-day);start.setHours(0,0,0,0);return d>=start&&d<=n}
+function showTab(id){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));if(id==='documents')document.getElementById('documentResult').innerHTML=''}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function updateClientSelects(){['rideClient','docClient'].forEach(id=>{const s=document.getElementById(id),old=s.value;s.innerHTML='<option value="">'+(id==='docClient'?'Choisir un client…':'Client non enregistré')+'</option>'+db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');s.value=old})}
+function render(){
+ const p=document.getElementById('period').value;const rides=db.rides.filter(r=>inPeriod(r.date,p)), expenses=db.expenses.filter(e=>inPeriod(e.date,p));
+ const revenue=rides.reduce((a,r)=>a+Number(r.price||0),0), costs=expenses.reduce((a,e)=>a+Number(e.amount||0),0), hours=rides.reduce((a,r)=>a+Number(r.minutes||0),0)/60;
+ kpiRevenue.textContent=money(revenue);kpiExpenses.textContent=money(costs);kpiNet.textContent=money(revenue-costs);kpiHours.textContent=hours.toLocaleString('fr-FR',{maximumFractionDigits:1})+' h';kpiHourly.textContent=money(hours?revenue/hours:0);kpiCount.textContent=rides.length;
+ updateClientSelects();
+ rideList.innerHTML=db.rides.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>{const c=db.clients.find(c=>c.id===r.clientId);return `<div class="item"><div class="item-top"><div><strong>${esc(r.name||c?.name||'Course')}</strong><div class="muted">${fmtDate(r.date)} · ${Number(r.minutes||0)} min · ${esc(r.payment||'')}</div><div class="muted">${esc(r.from||'')} ${r.to?'→ '+esc(r.to):''}</div></div><div class="amount">${money(r.price)}</div></div>${r.notes?`<p class="muted">${esc(r.notes)}</p>`:''}<div class="item-actions"><button class="secondary danger" onclick="delItem('rides','${r.id}')">Supprimer</button></div></div>`}).join('')||'<div class="empty">Aucune course enregistrée.</div>';
+ expenseList.innerHTML=db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<div class="item"><div class="item-top"><div><strong>${esc(e.description)}</strong><div class="muted">${fmtDate(e.date)} · ${esc(e.category)}</div></div><div class="amount">${money(e.amount)}</div></div><div class="item-actions"><button class="secondary danger" onclick="delItem('expenses','${e.id}')">Supprimer</button></div></div>`).join('')||'<div class="empty">Aucune dépense enregistrée.</div>';
+ clientList.innerHTML=db.clients.map(c=>`<div class="item"><div class="item-top"><div><strong>${esc(c.name)}</strong><div class="muted">${esc(c.phone||'')}${c.phone&&c.email?' · ':''}${esc(c.email||'')}<br>${esc(c.address||'')}</div>${c.notes?`<p class="muted">${esc(c.notes)}</p>`:''}</div></div><div class="item-actions"><button class="secondary danger" onclick="delItem('clients','${c.id}')">Supprimer</button></div></div>`).join('')||'<div class="empty">Aucun client enregistré.</div>';
+ documentList.innerHTML=db.documents.slice().sort((a,b)=>b.created.localeCompare(a.created)).map(d=>`<div class="item"><div class="item-top"><div><strong>${esc(d.number)} · ${esc(d.typeLabel)}</strong><div class="muted">${fmtDate(d.date)} · ${esc(d.clientName||'Client non renseigné')}</div></div><div class="amount">${money(d.totalTTC??d.total??0)}</div></div><div class="item-actions"><button class="secondary" onclick="reopenDoc('${d.id}')">Afficher / imprimer</button><button class="secondary danger" onclick="delItem('documents','${d.id}')">Supprimer de la liste</button></div></div>`).join('')||'<div class="empty">Aucun document créé.</div>';
+}
+window.delItem=(type,id)=>{if(!confirm('Supprimer cet élément ?'))return;db[type]=db[type].filter(x=>x.id!==id);if(type==='clients'){db.rides.forEach(r=>{if(r.clientId===id)r.clientId=''});db.documents.forEach(d=>{if(d.clientId===id)d.clientId=''})}save()};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+rideDate.value=today();expenseDate.value=today();docDate.value=today();
+period.addEventListener('change',render);
+rideForm.addEventListener('submit',e=>{e.preventDefault();db.rides.push({id:uid(),date:rideDate.value,minutes:Number(rideDuration.value),clientId:rideClient.value,name:rideName.value.trim(),from:rideFrom.value.trim(),to:rideTo.value.trim(),price:Number(ridePrice.value),payment:ridePayment.value,notes:rideNotes.value.trim()});e.target.reset();rideDate.value=today();save();showTab('rides')});
+expenseForm.addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:uid(),date:expenseDate.value,amount:Number(expenseAmount.value),category:expenseCategory.value,description:expenseDescription.value.trim()});e.target.reset();expenseDate.value=today();save();showTab('expenses')});
+clientForm.addEventListener('submit',e=>{e.preventDefault();db.clients.push({id:uid(),name:clientName.value.trim(),phone:clientPhone.value.trim(),email:clientEmail.value.trim(),address:clientAddress.value.trim(),notes:clientNotes.value.trim()});e.target.reset();save();showTab('clients')});
+const settingIds=['bizName','bizAddress','bizPhone','bizEmail','bizSiren','bizRevtc','bizVehicle','bizVat','bizVatNote','bizPaymentTerms'];
+function loadSettings(){settingIds.forEach(id=>document.getElementById(id).value=db.settings[id]||'')}
+loadSettings();
+settingsForm.addEventListener('submit',e=>{e.preventDefault();settingIds.forEach(id=>db.settings[id]=document.getElementById(id).value.trim());save();alert('Informations professionnelles enregistrées.')});
+docType.addEventListener('change',()=>{const r=docType.value==='reservation';reservationFields.style.display=r?'block':'none';commercialFields.style.display=r?'none':'block';makeDoc.textContent=r?'Générer le bon de réservation':docType.value==='quote'?'Générer le devis':'Générer la facture'});docType.dispatchEvent(new Event('change'));
+function nextNumber(type){db.counters[type]=(Number(db.counters[type])||0)+1;const prefix=type==='reservation'?'BR':type==='quote'?'DEV':'FACT';return prefix+'-'+new Date().getFullYear()+'-'+String(db.counters[type]).padStart(4,'0')}
+function businessBlock(){const s=db.settings;return `<strong>${esc(s.bizName||'NOM / DÉNOMINATION À RENSEIGNER')}</strong><br>${esc(s.bizAddress||'Adresse professionnelle à renseigner')}<br>${s.bizPhone?'Tél. : '+esc(s.bizPhone)+'<br>':''}${s.bizEmail?'E-mail : '+esc(s.bizEmail)+'<br>':''}${s.bizSiren?'SIREN : '+esc(s.bizSiren)+'<br>':'SIREN à renseigner<br>'}${s.bizRevtc?'N° REVTC : '+esc(s.bizRevtc)+'<br>':'N° REVTC à renseigner<br>'}${s.bizVehicle?'Véhicule : '+esc(s.bizVehicle)+'<br>':''}${s.bizVat?'TVA intracom. : '+esc(s.bizVat)+'<br>':''}` }
+function clientBlock(c){return `<strong>${esc(c?.name||'Client à renseigner')}</strong><br>${esc(c?.address||'Adresse du client à renseigner')}<br>${c?.phone?'Tél. : '+esc(c.phone)+'<br>':''}${c?.email?'E-mail : '+esc(c.email):''}`}
+function docHtml(d){
+ const reservation=d.type==='reservation',quote=d.type==='quote',s=db.settings;
+ const title=reservation?'Bon de réservation VTC':quote?'Devis':'Facture';
+ let body='';
+ if(reservation){body=`<p><strong>Référence :</strong> ${esc(d.number)}<br><strong>Date du justificatif :</strong> ${fmtDate(d.date)}<br><strong>Date et heure de réservation :</strong> ${fmtDateTime(d.bookedAt)}<br><strong>Prise en charge souhaitée :</strong> ${fmtDateTime(d.pickupAt)}<br><strong>Lieu de prise en charge :</strong> ${esc(d.pickupPlace)}<br>${d.dropPlace?'<strong>Destination :</strong> '+esc(d.dropPlace)+'<br>':''}<strong>Client :</strong> ${esc(d.clientName)}<br><strong>Téléphone client :</strong> ${esc(d.clientPhone||'à renseigner')}</p><p><strong>Prestation / référence :</strong> ${esc(d.title||'Transport VTC réservé')}<br>${d.details?esc(d.details):''}</p>`}
+ else {body=`<p><strong>Référence :</strong> ${esc(d.number)}<br><strong>Date :</strong> ${fmtDate(d.date)}<br>${quote?'':'<strong>Échéance de paiement :</strong> '+(fmtDate(d.due)||'à renseigner')+'<br>'}<strong>Mode de paiement :</strong> ${esc(d.payment||'à convenir')}</p><table class="doc-table"><thead><tr><th>Prestation</th><th>Qté</th><th>Prix unitaire HT</th><th>Total HT</th></tr></thead><tbody><tr><td>${esc(d.title)}<br><span class="muted">${esc(d.details||'')}</span></td><td>${d.qty}</td><td>${money(d.unitPrice)}</td><td>${money(d.totalHT)}</td></tr></tbody></table><div class="doc-total">Total HT : ${money(d.totalHT)}<br>TVA (${d.vatRate}%): ${money(d.vatAmount)}<br>Total TTC : ${money(d.totalTTC)}</div>${s.bizVatNote?'<p>'+esc(s.bizVatNote)+'</p>':''}<p class="note">${esc(s.bizPaymentTerms||'Conditions de paiement à compléter selon votre situation.')}</p>`}
+ return `<div class="doc-preview"><h2>${title}</h2><div class="doc-head"><div>${businessBlock()}</div><div><strong>Client</strong><br>${clientBlock({name:d.clientName,phone:d.clientPhone,email:d.clientEmail,address:d.clientAddress})}</div></div><hr>${body}<p class="note" style="margin-top:24px">Document généré par Mon VTC. Vérifiez toutes les informations avant émission.</p></div>`
+}
+function createDocument(){
+ const type=docType.value,c=db.clients.find(c=>c.id===docClient.value)||null;
+ if(!db.settings.bizName||!db.settings.bizSiren||!db.settings.bizRevtc){if(!confirm('Tes informations professionnelles (nom, SIREN et REVTC) ne sont pas toutes renseignées. Générer quand même un brouillon ?'))return}
+ if(type==='reservation'&&(!c?.phone||!bookedAt.value||!pickupAt.value||!pickupPlace.value)){alert('Pour un bon de réservation, renseigne le client et son téléphone, la date/heure de réservation, l’heure souhaitée et le lieu de prise en charge.');return}
+ if(type!=='reservation'&&(!c||!docTitle.value.trim()||docPrice.value==='')){alert('Choisis un client, une prestation et un prix.');return}
+ const d={id:uid(),type,typeLabel:type==='reservation'?'Bon de réservation':type==='quote'?'Devis':'Facture',number:nextNumber(type),date:docDate.value||today(),created:new Date().toISOString(),clientId:c?.id||'',clientName:c?.name||'',clientPhone:c?.phone||'',clientEmail:c?.email||'',clientAddress:c?.address||'',bookedAt:bookedAt.value,pickupAt:pickupAt.value,pickupPlace:pickupPlace.value.trim(),dropPlace:dropPlace.value.trim(),title:docTitle.value.trim(),details:docDetails.value.trim(),qty:Number(docQty.value)||1,unitPrice:Number(docPrice.value)||0,vatRate:Number(docVat.value)||0,due:docDue.value,payment:docPayment.value,reference:docRef.value.trim()};
+ d.totalHT=d.qty*d.unitPrice;d.vatAmount=d.totalHT*d.vatRate/100;d.totalTTC=d.totalHT+d.vatAmount;
+ db.documents.push(d);localStorage.setItem(KEY,JSON.stringify(db));render();displayDoc(d);alert('Document créé. Vérifie les informations, puis utilise « Imprimer / Enregistrer en PDF ».');
+}
+function displayDoc(d){showTab('documents');document.getElementById('documentResult').innerHTML=docHtml(d)+`<div class="doc-actions no-print"><button class="primary" onclick="window.print()">Imprimer / Enregistrer en PDF</button><button class="secondary" onclick="document.getElementById('documentResult').innerHTML=''">Fermer l’aperçu</button></div>`;document.getElementById('documentResult').scrollIntoView({behavior:'smooth',block:'start'})}
+window.reopenDoc=id=>{const d=db.documents.find(d=>d.id===id);if(d)displayDoc(d)};
+makeDoc.addEventListener('click',e=>{e.preventDefault();createDocument()});
+function download(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+exportJson.onclick=()=>download('sauvegarde-mon-vtc-'+today()+'.json',JSON.stringify(db,null,2),'application/json');
+function csv(rows){return '\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n')}
+exportRidesCsv.onclick=()=>download('courses-mon-vtc.csv',csv([['Date','Client','Référence','Départ','Arrivée','Durée minutes','Prix EUR','Paiement','Notes'],...db.rides.map(r=>[r.date,db.clients.find(c=>c.id===r.clientId)?.name||'',r.name,r.from,r.to,r.minutes,r.price,r.payment,r.notes])]),'text/csv;charset=utf-8');
+exportExpensesCsv.onclick=()=>download('depenses-mon-vtc.csv',csv([['Date','Catégorie','Description','Montant EUR'],...db.expenses.map(e=>[e.date,e.category,e.description,e.amount])]),'text/csv;charset=utf-8');
+importJson.onclick=()=>{const f=importFile.files[0];if(!f){alert('Choisis d’abord un fichier JSON.');return}const reader=new FileReader();reader.onload=()=>{try{const x=JSON.parse(reader.result);if(!Array.isArray(x.clients)||!Array.isArray(x.rides)||!Array.isArray(x.expenses))throw Error();if(!confirm('Remplacer toutes les données actuelles par cette sauvegarde ?'))return;db={...blank(),...x};save();loadSettings();alert('Sauvegarde restaurée.')}catch(err){alert('Fichier invalide ou incompatible.')}};reader.readAsText(f)};
+clearAll.onclick=()=>{if(confirm('Effacer définitivement tous les clients, courses, dépenses, documents et paramètres ? Fais une sauvegarde avant.')){db=blank();save();loadSettings()}};
+render();
+</script>
+</body></html>
