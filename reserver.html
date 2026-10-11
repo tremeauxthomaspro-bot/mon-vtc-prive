@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b2b">
+<title>Réserver un chauffeur — Aubrac VTC</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172231;background:#f4f6f8}*{box-sizing:border-box}body{margin:0}header{padding:28px 20px 30px;background:#101b2b;color:white;border-radius:0 0 26px 26px}header small{color:#d6b987;letter-spacing:2px;font-weight:800;font-size:12px}h1{font-size:30px;line-height:1.12;margin:10px 0}header p{color:#e0e5ec;line-height:1.5;margin-bottom:0}main{max-width:700px;margin:auto;padding:16px}.card{background:white;border:1px solid #e4e8ee;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 4px 18px #17203308}h2{font-size:20px;margin:0 0 8px}.muted{font-size:13px;color:#697586;line-height:1.5}label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}input,select,textarea{width:100%;padding:14px;border:1px solid #d6dde7;border-radius:11px;font:inherit;font-size:16px;background:#fff;color:#172231}textarea{min-height:95px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.wide{width:100%;margin-top:18px;padding:15px;background:#101b2b;color:#fff;border:0;border-radius:12px;font-size:16px;font-weight:800}.wide:disabled{opacity:.55}.status{white-space:pre-wrap;line-height:1.5;margin-top:14px;font-size:14px}.error{color:#9d2922}.success{color:#17683a;background:#eef8f0;border-radius:12px;padding:14px}.foot{text-align:center;color:#697586;font-size:12px;padding:12px 8px 30px}.hidden{display:none!important}.required{color:#9d2922}.notice{background:#f7f1e5;color:#72572c;padding:12px;border-radius:12px;font-size:13px;line-height:1.5;margin-top:14px}@media(max-width:480px){.grid{grid-template-columns:1fr 1fr}header{padding-top:24px}}
+</style>
+</head>
+<body>
+<header><small>AUBRAC VTC · CHAUFFEUR PRIVÉ</small><h1>Votre trajet, en toute simplicité.</h1><p>Envoyez votre demande de réservation. Nous vous recontacterons pour confirmer les détails de votre trajet.</p></header>
+<main>
+<section class="card" id="formCard">
+<h2>Demander une réservation</h2>
+<p class="muted">Les champs marqués d’un <span class="required">*</span> sont obligatoires. L’envoi de cette demande ne vaut pas encore confirmation de la course.</p>
+<form id="bookingForm">
+<label for="client_name">Votre nom <span class="required">*</span></label><input id="client_name" name="client_name" autocomplete="name" maxlength="120" required placeholder="Prénom et nom">
+<div class="grid">
+<div><label for="client_phone">Téléphone <span class="required">*</span></label><input id="client_phone" name="client_phone" type="tel" autocomplete="tel" maxlength="40" required placeholder="06 00 00 00 00"></div>
+<div><label for="client_email">E-mail</label><input id="client_email" name="client_email" type="email" autocomplete="email" maxlength="254" placeholder="vous@exemple.fr"></div>
+</div>
+<label for="pickup_address">Adresse de départ <span class="required">*</span></label><input id="pickup_address" name="pickup_address" autocomplete="street-address" maxlength="500" required placeholder="Adresse complète, gare ou aéroport">
+<label for="destination_address">Destination <span class="required">*</span></label><input id="destination_address" name="destination_address" maxlength="500" required placeholder="Où souhaitez-vous aller ?">
+<div class="grid">
+<div><label for="pickup_date">Date <span class="required">*</span></label><input id="pickup_date" name="pickup_date" type="date" required></div>
+<div><label for="pickup_time">Heure <span class="required">*</span></label><input id="pickup_time" name="pickup_time" type="time" required></div>
+</div>
+<label for="passengers">Nombre de passagers <span class="required">*</span></label><select id="passengers" name="passengers" required><option value="1">1 passager</option><option value="2">2 passagers</option><option value="3">3 passagers</option><option value="4">4 passagers</option><option value="5">5 passagers</option><option value="6">6 passagers</option><option value="7">7 passagers</option><option value="8">8 passagers</option></select>
+<label for="client_message">Précisions (facultatif)</label><textarea id="client_message" name="client_message" maxlength="1500" placeholder="Bagages, siège enfant, numéro de vol…"></textarea>
+<div style="position:absolute;left:-10000px" aria-hidden="true"><label for="website">Ne pas remplir</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+<div class="notice">🔒 Vos coordonnées servent à traiter votre demande de transport. Votre réservation ne sera confirmée qu’après notre retour vers vous.</div>
+<button id="submitButton" class="wide" type="submit">Envoyer ma demande</button>
+<div id="status" class="status" role="status" aria-live="polite"></div>
+</form>
+</section>
+<div class="foot">Aubrac VTC · Chauffeur privé<br>Merci de votre confiance.</div>
+</main>
+<script>
+const SUPABASE_URL='https://dvdbzaneegpgolvioybh.supabase.co';
+const SUPABASE_KEY='sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY';
+const DRIVER_SLUG='aubrac-vtc';
+const form=document.getElementById('bookingForm');
+const statusEl=document.getElementById('status');
+const submitButton=document.getElementById('submitButton');
+const dateInput=document.getElementById('pickup_date');
+const localToday=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+dateInput.min=localToday();
+form.addEventListener('submit',async(e)=>{
+ e.preventDefault();
+ statusEl.className='status';statusEl.textContent='';
+ if(!form.reportValidity())return;
+ submitButton.disabled=true;submitButton.textContent='Envoi en cours…';
+ const payload={slug:DRIVER_SLUG,client_name:document.getElementById('client_name').value.trim(),client_phone:document.getElementById('client_phone').value.trim(),client_email:document.getElementById('client_email').value.trim(),pickup_address:document.getElementById('pickup_address').value.trim(),destination_address:document.getElementById('destination_address').value.trim(),pickup_date:dateInput.value,pickup_time:document.getElementById('pickup_time').value,passengers:Number(document.getElementById('passengers').value),client_message:document.getElementById('client_message').value.trim(),website:document.getElementById('website').value};
+ try{
+  const response=await fetch(SUPABASE_URL+'/functions/v1/submit-vtc-booking',{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},body:JSON.stringify(payload)});
+  let result={};try{result=await response.json()}catch(_){}
+  if(!response.ok||result.error)throw new Error(result.error||'L’envoi n’a pas abouti. Réessayez dans quelques instants.');
+  form.classList.add('hidden');
+  statusEl.className='status success';
+  statusEl.innerHTML='<strong>Demande envoyée !</strong><br>Merci, votre demande a bien été transmise à Aubrac VTC. Votre trajet sera confirmé après prise de contact.';
+  document.getElementById('formCard').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(err){statusEl.className='status error';statusEl.textContent='Impossible d’envoyer la demande : '+(err.message||'vérifiez votre connexion puis réessayez.');}
+ finally{submitButton.disabled=false;submitButton.textContent='Envoyer ma demande';}
+});
+</script>
+</body></html>
