@@ -150,7 +150,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <div class="metric"><span>CA par heure</span><strong id="kpiHourly">0,00 €</strong><small>CA ÷ heures enregistrées</small></div>
 <div class="metric"><span>Courses</span><strong id="kpiCount">0</strong><small>Courses dans la période</small></div>
 </div>
-<div class="card"><h3>À savoir</h3><p class="note">Les chiffres sont calculés uniquement à partir des éléments saisis ici. Le « reste » ne déduit pas les cotisations URSSAF, impôts ou frais non enregistrés. Les données restent dans le stockage du navigateur sur cet appareil.</p></div>
+<div class="card"><h3>À savoir</h3><p class="note">Les chiffres sont calculés uniquement à partir des éléments saisis ici. Le « reste » ne déduit pas les cotisations URSSAF, impôts ou frais non enregistrés. Les données sont enregistrées sur ton compte sécurisé lorsque le statut indique « Synchronisé dans le cloud ». Pense à exporter une sauvegarde de temps en temps.</p></div>
 </section>
 <section class="panel" id="rides">
 <h2>Ajouter une course</h2>
@@ -318,7 +318,7 @@ function createDocument(){
  if(type!=='reservation'&&(!c||!docTitle.value.trim()||docPrice.value==='')){alert('Choisis un client, une prestation et un prix.');return}
  const d={id:uid(),type,typeLabel:type==='reservation'?'Bon de réservation':type==='quote'?'Devis':'Facture',number:nextNumber(type),date:docDate.value||today(),created:new Date().toISOString(),clientId:c?.id||'',clientName:c?.name||'',clientPhone:c?.phone||'',clientEmail:c?.email||'',clientAddress:c?.address||'',bookedAt:bookedAt.value,pickupAt:pickupAt.value,pickupPlace:pickupPlace.value.trim(),dropPlace:dropPlace.value.trim(),title:docTitle.value.trim(),details:docDetails.value.trim(),qty:Number(docQty.value)||1,unitPrice:Number(docPrice.value)||0,vatRate:Number(docVat.value)||0,due:docDue.value,payment:docPayment.value,reference:docRef.value.trim()};
  d.totalHT=d.qty*d.unitPrice;d.vatAmount=d.totalHT*d.vatRate/100;d.totalTTC=d.totalHT+d.vatAmount;
- db.documents.push(d);localStorage.setItem(KEY,JSON.stringify(db));render();displayDoc(d);alert('Document créé. Vérifie les informations, puis utilise « Imprimer / Enregistrer en PDF ».');
+ db.documents.push(d);save();displayDoc(d);alert('Document créé. Vérifie les informations, puis utilise « Imprimer / Enregistrer en PDF ».');
 }
 function displayDoc(d){showTab('documents');document.getElementById('documentResult').innerHTML=docHtml(d)+`<div class="doc-actions no-print"><button class="primary" onclick="window.print()">Imprimer / Enregistrer en PDF</button><button class="secondary" onclick="document.getElementById('documentResult').innerHTML=''">Fermer l’aperçu</button></div>`;document.getElementById('documentResult').scrollIntoView({behavior:'smooth',block:'start'})}
 window.reopenDoc=id=>{const d=db.documents.find(d=>d.id===id);if(d)displayDoc(d)};
