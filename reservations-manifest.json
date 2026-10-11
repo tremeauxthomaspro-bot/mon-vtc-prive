@@ -1,0 +1,13 @@
+{
+  "name": "Mon VTC – Réservations",
+  "short_name": "Réservations",
+  "description": "Gérer les demandes de réservation de Mon VTC",
+  "start_url": "./reservations.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#101b2b",
+  "icons": [
+    {"src":"./reservations-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
