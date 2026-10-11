@@ -27,7 +27,7 @@ button{font:inherit;cursor:pointer;border-radius:11px;padding:11px 13px;font-wei
 <script>
 const URL="https://dvdbzaneegpgolvioybh.supabase.co";
 const KEY="sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY";
-const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-dvdbzaneegpgolvioybh-auth-token'}});
+const sb=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-dvdbzaneegpgolvioybh-demandes-auth-token'}});
 let session=null,driver=null;
 const $=id=>document.getElementById(id);
 function msg(id,s){$(id).textContent=s||""}
