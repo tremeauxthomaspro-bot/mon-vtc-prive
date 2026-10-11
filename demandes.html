@@ -50,7 +50,11 @@ $("loginForm").addEventListener("submit",async e=>{
   const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
   if(error){showLogin("Connexion impossible : "+(error.message||"vérifie l’adresse e-mail et le mot de passe."));return}
   session=data.session;
-  if(!session){showLogin("Supabase n’a pas renvoyé de session. Réessaie.");return}
+  if(!session){
+   const check=await sb.auth.getSession();
+   session=check.data?.session||null;
+  }
+  if(!session){showLogin("Connexion acceptée par le serveur, mais la session n’est pas conservée sur cet iPhone. Ferme cette page, ouvre Mon VTC dans Safari, reconnecte-toi, puis reviens ici.");return}
  }catch(err){
   console.error("Connexion Mon VTC",err);
   showLogin("Erreur de connexion : "+(err&&err.message?err.message:"erreur réseau ou navigateur"));
