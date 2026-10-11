@@ -42,7 +42,31 @@ async function loadProfile(){
  if(driver){$("driverName").value=driver.display_name;$("driverSlug").value=driver.slug;$("notifyEmail").value=driver.notification_email;showLink();await loadBookings()}
  else{$("bookingList").innerHTML='<div class="empty">Enregistre ton profil pour activer ton lien de réservation.</div>';$("linkBox").classList.add("hidden")}
 }
-$("loginForm").addEventListener("submit",async e=>{e.preventDefault();const button=$("loginForm").querySelector('button[type="submit"],button:not([type])');button.disabled=true;button.textContent="Connexion…";msg("loginMsg","Tentative de connexion…");try{if(!window.supabase||!window.supabase.createClient){msg("loginMsg","Le service de connexion ne s’est pas chargé. Recharge la page ou essaie dans Safari.");return}const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){msg("loginMsg","Connexion impossible : "+(error.message||"vérifie l’adresse e-mail et le mot de passe."));return}session=data.session;if(!session){msg("loginMsg","Connexion non confirmée. Réessaie.");return}showWorkspace();msg("profileMsg","Connecté. Chargement du profil…");await loadProfile()}catch(err){console.error("Connexion Mon VTC",err);msg("loginMsg","Erreur de connexion ou réseau. Vérifie ta connexion Internet puis réessaie.")}finally{button.disabled=false;button.textContent="Se connecter"}});
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const button=$("loginForm").querySelector('button[type="submit"],button:not([type])');
+ button.disabled=true;button.textContent="Connexion…";msg("loginMsg","Tentative de connexion…");
+ try{
+  const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error){showLogin("Connexion impossible : "+(error.message||"vérifie l’adresse e-mail et le mot de passe."));return}
+  session=data.session;
+  if(!session){showLogin("Supabase n’a pas renvoyé de session. Réessaie.");return}
+ }catch(err){
+  console.error("Connexion Mon VTC",err);
+  showLogin("Erreur de connexion : "+(err&&err.message?err.message:"erreur réseau ou navigateur"));
+  return;
+ }finally{
+  button.disabled=false;button.textContent="Se connecter";
+ }
+ showWorkspace();
+ msg("profileMsg","Connexion réussie. Chargement du profil…");
+ try{
+  await loadProfile();
+ }catch(err){
+  console.error("Chargement profil Mon VTC",err);
+  msg("profileMsg","Connexion réussie, mais le profil n’a pas pu être chargé : "+(err&&err.message?err.message:"erreur inconnue")+". Vérifie la configuration des tables.");
+ }
+});
 $("logout").onclick=async()=>{await sb.auth.signOut();session=null;driver=null;showLogin()};
 $("profileForm").addEventListener("submit",async e=>{
  e.preventDefault();if(!session)return;
