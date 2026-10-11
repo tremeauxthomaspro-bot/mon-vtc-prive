@@ -107,6 +107,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
 </style>
 
+<style id="dashboard-upgrade">
+.welcome-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 20px;margin:0 0 16px;border-radius:22px;background:linear-gradient(135deg,#111d32 0%,#1b2d49 68%,#263b56 100%);color:#fff;box-shadow:0 12px 28px #111d3220;position:relative;overflow:hidden}
+.welcome-card:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #d9bd8060;border-radius:50%;right:-70px;top:-90px;box-shadow:0 0 0 18px #d9bd8010,0 0 0 38px #d9bd8008}
+.welcome-kicker{font-size:10px;font-weight:800;letter-spacing:.16em;color:#e3c98e}.welcome-card h2{font-size:25px;margin:9px 0 5px;color:#fff}.welcome-card p{font-size:13px;margin:0;color:#d4dce8;text-transform:capitalize}.welcome-mark{z-index:1;display:grid;place-items:center;width:54px;height:54px;border:1px solid #d8bd82;border-radius:17px;color:#e6cc91;font-size:17px;font-weight:850;letter-spacing:-.05em}
+.quick-actions{margin-bottom:22px}.quick-main{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:15px;border:1px solid #d9bd8055;border-radius:17px;background:linear-gradient(110deg,#f8f1e2,#fff);color:#17243a;box-shadow:0 4px 12px #1720330a}.quick-plus{display:grid;place-items:center;flex:0 0 44px;height:44px;border-radius:14px;background:#17243a;color:#e6cc91;font-size:29px;font-weight:300}.quick-main strong,.quick-main small{display:block}.quick-main strong{font-size:15px}.quick-main small{font-size:11px;color:#6c7481;margin-top:4px}.quick-arrow{margin-left:auto;font-size:28px;color:#a8874c}.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}.quick-small{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:12px 10px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font-size:11px;font-weight:750;text-align:left}.quick-small span{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#f2ead8;color:#94713a;font-size:19px}.today-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 10px}.today-heading h3{margin:0}.today-heading span{font-size:10px;color:var(--muted);text-align:right}.today-metric{border-color:#d8c69d80}.today-metric strong{color:#182941}.today-grid{margin-bottom:18px}
+@media(max-width:420px){.welcome-card{padding:18px 15px}.welcome-card h2{font-size:23px}.quick-grid{gap:6px}.quick-small{padding:10px 7px;font-size:10px}.today-heading{align-items:flex-start;flex-direction:column}.today-heading span{text-align:left}}
+</style>
 </head>
 <body>
 <section id="authGate">
@@ -129,6 +136,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <button class="tab active" data-tab="home">Résumé</button><button class="tab" data-tab="rides">Courses</button><button class="tab" data-tab="expenses">Dépenses</button><button class="tab" data-tab="clients">Clients</button><button class="tab" data-tab="documents">Documents</button><button class="tab" data-tab="settings">Mon entreprise</button><button class="tab" data-tab="backup">Sauvegarde</button>
 </div>
 <section class="panel active" id="home">
+<div class="welcome-card"><div><div class="welcome-kicker">AUBRAC VTC · ESPACE CHAUFFEUR</div><h2 id="welcomeTitle">Bonjour 👋</h2><p id="welcomeDate">Prêt pour une nouvelle journée ?</p></div><div class="welcome-mark">AV</div></div>
+<div class="quick-actions no-print"><button type="button" class="quick-main" id="quickRide"><span class="quick-plus">＋</span><span><strong>Ajouter une course</strong><small>Enregistrer un trajet en quelques secondes</small></span><span class="quick-arrow">›</span></button><div class="quick-grid"><button type="button" class="quick-small" id="quickExpense"><span>↗</span>Ajouter une dépense</button><button type="button" class="quick-small" id="quickClient"><span>♙</span>Nouveau client</button><button type="button" class="quick-small" id="quickDocument"><span>▤</span>Créer un document</button></div></div>
+<div class="today-heading"><h3>Aujourd’hui</h3><span id="todayRideLabel">Votre journée en un coup d’œil</span></div>
+<div class="grid today-grid"><div class="metric today-metric"><span>CA du jour</span><strong id="todayRevenue">0,00 €</strong><small id="todayCount">0 course enregistrée</small></div><div class="metric today-metric"><span>Dépenses du jour</span><strong id="todayExpenses">0,00 €</strong><small>Frais enregistrés aujourd’hui</small></div></div>
 <h2>Mon activité</h2>
 <div class="card"><label for="period">Période des indicateurs</label><select id="period"><option value="month">Ce mois-ci</option><option value="week">Cette semaine</option><option value="year">Cette année</option><option value="all">Depuis le début</option></select></div>
 <div class="grid">
@@ -253,6 +264,7 @@ function showTab(id){document.querySelectorAll('.tab').forEach(b=>b.classList.to
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 function updateClientSelects(){['rideClient','docClient'].forEach(id=>{const s=document.getElementById(id),old=s.value;s.innerHTML='<option value="">'+(id==='docClient'?'Choisir un client…':'Client non enregistré')+'</option>'+db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');s.value=old})}
 function render(){
+ renderToday();
  const p=document.getElementById('period').value;const rides=db.rides.filter(r=>inPeriod(r.date,p)), expenses=db.expenses.filter(e=>inPeriod(e.date,p));
  const revenue=rides.reduce((a,r)=>a+Number(r.price||0),0), costs=expenses.reduce((a,e)=>a+Number(e.amount||0),0), hours=rides.reduce((a,r)=>a+Number(r.minutes||0),0)/60;
  kpiRevenue.textContent=money(revenue);kpiExpenses.textContent=money(costs);kpiNet.textContent=money(revenue-costs);kpiHours.textContent=hours.toLocaleString('fr-FR',{maximumFractionDigits:1})+' h';kpiHourly.textContent=money(hours?revenue/hours:0);kpiCount.textContent=rides.length;
@@ -266,6 +278,20 @@ window.delItem=(type,id)=>{if(!confirm('Supprimer cet élément ?'))return;db[ty
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 rideDate.value=today();expenseDate.value=today();docDate.value=today();
 period.addEventListener('change',render);
+function openQuickTab(id){showTab(id);const target={rides:'rideDuration',expenses:'expenseAmount',clients:'clientName',documents:'docType'}[id];if(target)setTimeout(()=>document.getElementById(target).focus(),80)}
+quickRide.addEventListener('click',()=>openQuickTab('rides'));
+quickExpense.addEventListener('click',()=>openQuickTab('expenses'));
+quickClient.addEventListener('click',()=>openQuickTab('clients'));
+quickDocument.addEventListener('click',()=>openQuickTab('documents'));
+function renderToday(){
+ const t=today(),tr=db.rides.filter(r=>r.date===t),te=db.expenses.filter(e=>e.date===t);
+ const rev=tr.reduce((s,r)=>s+Number(r.price||0),0),cost=te.reduce((s,e)=>s+Number(e.amount||0),0);
+ todayRevenue.textContent=money(rev);todayExpenses.textContent=money(cost);
+ todayCount.textContent=tr.length+' course'+(tr.length>1?'s':'')+' enregistrée'+(tr.length>1?'s':'');
+ todayRideLabel.textContent=tr.length?('Reste après frais du jour : '+money(rev-cost)):'Vos premières courses apparaîtront ici';
+ const d=new Date();welcomeTitle.textContent=(d.getHours()<12?'Bonjour 👋':d.getHours()<18?'Bon après-midi 👋':'Bonsoir 👋');
+ welcomeDate.textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · Votre activité, en un coup d’œil';
+}
 rideForm.addEventListener('submit',e=>{e.preventDefault();db.rides.push({id:uid(),date:rideDate.value,minutes:Number(rideDuration.value),clientId:rideClient.value,name:rideName.value.trim(),from:rideFrom.value.trim(),to:rideTo.value.trim(),price:Number(ridePrice.value),payment:ridePayment.value,notes:rideNotes.value.trim()});e.target.reset();rideDate.value=today();save();showTab('rides')});
 expenseForm.addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:uid(),date:expenseDate.value,amount:Number(expenseAmount.value),category:expenseCategory.value,description:expenseDescription.value.trim()});e.target.reset();expenseDate.value=today();save();showTab('expenses')});
 clientForm.addEventListener('submit',e=>{e.preventDefault();db.clients.push({id:uid(),name:clientName.value.trim(),phone:clientPhone.value.trim(),email:clientEmail.value.trim(),address:clientAddress.value.trim(),notes:clientNotes.value.trim()});e.target.reset();save();showTab('clients')});
