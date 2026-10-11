@@ -307,7 +307,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <script>
 const SUPABASE_URL='https://dvdbzaneegpgolvioybh.supabase.co';
 const SUPABASE_KEY='sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY';
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-dvdbzaneegpgolvioybh-auth-token'}});
 let currentSession=null,saveQueue=Promise.resolve(),authReady=false;
 const KEY='monVtcDataV2';const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const blank=()=>({clients:[],rides:[],expenses:[],documents:[],settings:{},counters:{reservation:0,quote:0,invoice:0}});
