@@ -15,7 +15,7 @@ button{font:inherit;cursor:pointer;border-radius:11px;padding:11px 13px;font-wei
 </style></head><body>
 <header><div class="k">MON VTC · ESPACE CHAUFFEUR</div><h1>Demandes de réservation</h1><p>Consultez les demandes reçues et confirmez uniquement les trajets que vous acceptez.</p></header>
 <main>
-<section id="login" class="card"><h2>Connexion chauffeur</h2><p class="muted">Utilise le même compte que pour Mon VTC.</p><form id="loginForm" onsubmit="return false;"><label for="email">Adresse e-mail</label><input id="email" type="email" required autocomplete="username"><label for="password">Mot de passe</label><input id="password" type="password" required autocomplete="current-password"><button class="primary" style="width:100%;margin-top:15px">Se connecter</button></form><div id="loginMsg" class="status"></div></section>
+<section id="login" class="card"><h2>Connexion chauffeur</h2><p class="muted">Utilise le même compte que pour Mon VTC.</p><form id="loginForm" onsubmit="return false;"><label for="email">Adresse e-mail</label><input id="email" type="email" required autocomplete="username"><label for="password">Mot de passe</label><input id="password" type="password" required autocomplete="current-password"><button type="button" id="loginButton" class="primary" style="width:100%;margin-top:15px">Se connecter</button></form><div id="loginMsg" class="status"></div></section>
 <section id="workspace" class="hidden">
 <div class="card"><div class="item-head"><h2>Mon lien de réservation</h2><button id="logout">Déconnexion</button></div><p class="muted">Complète ton profil une seule fois. Partage ensuite ce lien avec tes clients. Chaque chauffeur dispose de son propre lien et ne voit que ses demandes.</p>
 <form id="profileForm"><div class="row"><div><label for="driverName">Nom affiché</label><input id="driverName" required maxlength="100" placeholder="Ex. Thomas"></div><div><label for="driverSlug">Identifiant du lien</label><input id="driverSlug" required minlength="3" maxlength="50" pattern="[a-z0-9-]+" placeholder="thomas"></div></div><label for="notifyEmail">E-mail de notification</label><input id="notifyEmail" type="email" required placeholder="adresse où recevoir les demandes"><button class="primary" style="width:100%">Enregistrer mon profil</button></form><div id="profileMsg" class="status"></div><div id="linkBox" class="linkbox hidden"></div></div>
@@ -42,7 +42,7 @@ async function loadProfile(){
  if(driver){$("driverName").value=driver.display_name;$("driverSlug").value=driver.slug;$("notifyEmail").value=driver.notification_email;showLink();await loadBookings()}
  else{$("bookingList").innerHTML='<div class="empty">Enregistre ton profil pour activer ton lien de réservation.</div>';$("linkBox").classList.add("hidden")}
 }
-$("loginForm").addEventListener("submit",async e=>{
+$("loginButton").addEventListener("click",async e=>{
  e.preventDefault();
  const button=$("loginForm").querySelector('button[type="submit"],button:not([type])');
  button.disabled=true;button.textContent="Connexion…";msg("loginMsg","Tentative de connexion…");
