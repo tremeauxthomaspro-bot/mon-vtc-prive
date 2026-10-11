@@ -44,7 +44,7 @@ async function loadProfile(){
 }
 $("loginButton").addEventListener("click",async e=>{
  e.preventDefault();
- const button=$("loginForm").querySelector('button[type="submit"],button:not([type])');
+ const button=$("loginButton");
  button.disabled=true;button.textContent="Connexion…";msg("loginMsg","Tentative de connexion…");
  try{
   const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
