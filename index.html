@@ -49,8 +49,29 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 @media(max-width:520px){.doc-inner{padding:14px}.doc-banner{padding:20px 16px}.doc-brand{font-size:22px}.doc-title-row{display:block}.doc-reference{margin-top:12px}.doc-head{gap:8px}.doc-party{padding:10px;font-size:10px}.doc-party-title{font-size:12px}.doc-preview h2{font-size:20px}.doc-note-grid{grid-template-columns:1fr}.doc-motto{display:none}}
 @page{size:A4;margin:7mm}@media print{body{background:white;padding:0;font-size:10px}header,.tabs,main>.panel:not(.active),.no-print,.doc-actions{display:none!important}main{max-width:none;padding:0}.panel.active{display:block!important}.panel.active>*:not(.print-area){display:none!important}.print-area{display:block!important}.doc-preview{border:0;border-radius:0;padding:0;margin:0;overflow:visible;print-color-adjust:exact;-webkit-print-color-adjust:exact}.doc-banner{padding:13px 16px}.doc-brand{font-size:19px}.doc-tagline{margin-top:4px;font-size:8px}.doc-services{margin-top:10px;font-size:7px}.doc-banner{min-height:0}.doc-banner-brand{padding:16px 14px}.doc-banner-brand{padding:12px 9px}.doc-banner-photo{min-height:145px}.doc-mountain-logo{width:65px;height:28px}.doc-inner{padding:12px}.doc-title-row{margin-bottom:12px}.doc-gold{margin:10px 0}.doc-party{padding:10px;font-size:10px;line-height:1.45}.doc-section-title{margin:10px 0 5px;padding:8px 10px}.doc-details td{padding:5px 4px}.doc-table{margin-top:8px}.doc-table th,.doc-table td{padding:6px 5px}.doc-total{margin-top:8px;padding:8px;font-size:12px}.doc-note-grid{margin-top:10px;gap:10px}.doc-important{padding:10px;font-size:9px}.doc-motto{font-size:14px}.doc-footer{margin-top:10px;padding-top:7px;font-size:8px;break-inside:avoid;page-break-inside:avoid}.doc-preview h2{font-size:22px}.doc-head{grid-template-columns:1fr 1fr}.doc-table th,.doc-table td{border-bottom:1px solid #bbb}.doc-note-grid{grid-template-columns:1.15fr .85fr}.doc-motto{display:block}.print-note{display:block!important}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+#authGate{max-width:440px;margin:7vh auto;padding:22px;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 32px #17203312}
+#authGate h2{font-size:23px;margin:0 0 8px}#authGate .primary{margin-top:16px}
+#appShell{display:none}#accountBar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:12px auto 0;max-width:850px;padding:0 16px}
+#cloudStatus{font-size:12px;color:var(--muted)}#authMessage{margin-top:12px;font-size:13px;line-height:1.45;color:var(--danger)}
+</style>
 </head>
 <body>
+<section id="authGate">
+<h2>Mon VTC privé</h2>
+<p class="note">Connecte-toi pour retrouver tes courses, clients, dépenses et documents sur tes appareils. Chaque chauffeur dispose de son espace privé.</p>
+<form id="loginForm">
+<label for="loginEmail">Adresse e-mail</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="ton@email.fr">
+<label for="loginPassword">Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" required>
+<button class="primary" id="loginButton">Se connecter</button>
+</form>
+<p class="note">Les comptes sont créés par l’administrateur. Il n’y a pas d’inscription publique.</p>
+<button class="secondary" id="resetPassword">Mot de passe oublié</button>
+<div id="authMessage" role="status"></div>
+</section>
+<div id="accountBar" style="display:none"><span id="accountEmail"></span><span id="cloudStatus">Connexion sécurisée</span><button class="secondary" id="logoutButton">Se déconnecter</button></div>
+<div id="appShell">
 <header><div class="eyebrow">Tableau de bord personnel</div><h1>Mon VTC</h1><p>Courses privées · documents · recettes · dépenses</p></header>
 <main>
 <div class="tabs no-print" role="tablist">
@@ -146,12 +167,32 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <div class="card"><p class="note"><strong>Confidentialité :</strong> l’application n’envoie pas volontairement tes données à un serveur. Elles restent dans le stockage local du navigateur sur cet appareil. Elles ne sont pas automatiquement synchronisées. Fais régulièrement une sauvegarde. Le site public contient le code de l’application, pas tes données enregistrées.</p></div>
 </section>
 </main>
+</div>
 <script>
+const SUPABASE_URL='https://dvdbzaneegpgolvioybh.supabase.co';
+const SUPABASE_KEY='sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentSession=null,saveQueue=Promise.resolve(),authReady=false;
 const KEY='monVtcDataV2';const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const blank=()=>({clients:[],rides:[],expenses:[],documents:[],settings:{},counters:{reservation:0,quote:0,invoice:0}});
-let db;try{db=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){db=blank()}
+let db=blank();
 db.clients ||= [];db.rides ||= [];db.expenses ||= [];db.documents ||= [];db.settings ||= {};db.counters ||= {reservation:0,quote:0,invoice:0};
-function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function save(){render();if(!currentSession)return;const snapshot=JSON.parse(JSON.stringify(db));const uid=currentSession.user.id;saveQueue=saveQueue.then(async()=>{const {error}=await supabaseClient.from('vtc_user_data').upsert({user_id:uid,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error){document.getElementById('cloudStatus').textContent='Erreur de synchronisation';console.error(error)}else{document.getElementById('cloudStatus').textContent='Synchronisé dans le cloud'}}).catch(err=>{console.error(err);document.getElementById('cloudStatus').textContent='Erreur de synchronisation'});}
+
+const authGate=document.getElementById('authGate'),appShell=document.getElementById('appShell'),accountBar=document.getElementById('accountBar'),authMessage=document.getElementById('authMessage');
+function showSignedOut(message=''){currentSession=null;authGate.style.display='block';appShell.style.display='none';accountBar.style.display='none';authMessage.textContent=message}
+async function showSignedIn(session){currentSession=session;authGate.style.display='none';appShell.style.display='block';accountBar.style.display='flex';document.getElementById('accountEmail').textContent=session.user.email||'Compte chauffeur';document.getElementById('cloudStatus').textContent='Chargement des données…';
+const {data,error}=await supabaseClient.from('vtc_user_data').select('data').eq('user_id',session.user.id).maybeSingle();
+if(error){showSignedOut('Impossible de charger les données. Vérifie la connexion puis réessaie.');await supabaseClient.auth.signOut();return}
+if(data&&data.data&&typeof data.data==='object'){db={...blank(),...data.data};db.clients||=[];db.rides||=[];db.expenses||=[];db.documents||=[];db.settings||={};db.counters||={reservation:0,quote:0,invoice:0}}
+else{db=blank();const {error:insertError}=await supabaseClient.from('vtc_user_data').insert({user_id:session.user.id,data:db});if(insertError){showSignedOut('Impossible de créer ton espace privé.');await supabaseClient.auth.signOut();return}}
+loadSettings();render();document.getElementById('cloudStatus').textContent='Données synchronisées';}
+document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('loginButton');btn.disabled=true;btn.textContent='Connexion…';authMessage.textContent='';const {data,error}=await supabaseClient.auth.signInWithPassword({email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});btn.disabled=false;btn.textContent='Se connecter';if(error){authMessage.textContent='Connexion impossible : vérifie l’adresse e-mail et le mot de passe.';return}await showSignedIn(data.session)});
+document.getElementById('logoutButton').addEventListener('click',async()=>{await saveQueue;await supabaseClient.auth.signOut();db=blank();showSignedOut()});
+document.getElementById('resetPassword').addEventListener('click',async()=>{const email=document.getElementById('loginEmail').value.trim();if(!email){authMessage.textContent='Saisis ton adresse e-mail, puis appuie sur « Mot de passe oublié ».';return}const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});authMessage.textContent=error?'Impossible d’envoyer le lien de réinitialisation.':'Si un compte existe pour cette adresse, un e-mail de réinitialisation sera envoyé.'});
+supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){db=blank();showSignedOut();}});
+(async()=>{const {data}=await supabaseClient.auth.getSession();if(data.session)await showSignedIn(data.session);else showSignedOut();})();
+
 function money(n){return (Number(n)||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmtDate(s){if(!s)return '';const p=s.slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s}
