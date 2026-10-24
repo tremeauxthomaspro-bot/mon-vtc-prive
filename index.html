@@ -206,7 +206,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <header><div class="eyebrow">Tableau de bord personnel</div><h1>Mon VTC</h1><p>Courses privées · documents · recettes · dépenses</p></header>
 <main>
 <div class="tabs no-print" role="tablist">
-<button class="tab active" data-tab="home">Résumé</button><button class="tab" data-tab="rides">Courses</button><button class="tab" data-tab="expenses">Dépenses</button><button class="tab" data-tab="clients">Clients</button><button class="tab" data-tab="documents">Documents</button><button class="tab" data-tab="settings">Mon entreprise</button><button class="tab" data-tab="webbookings">Demandes web</button><button class="tab" data-tab="backup">Sauvegarde</button>
+<button class="tab active" data-tab="home">Résumé</button><button class="tab" data-tab="rides">Courses</button><button class="tab" data-tab="revenues">Autres recettes</button><button class="tab" data-tab="expenses">Dépenses</button><button class="tab" data-tab="clients">Clients</button><button class="tab" data-tab="documents">Documents</button><button class="tab" data-tab="settings">Mon entreprise</button><button class="tab" data-tab="webbookings">Demandes web</button><button class="tab" data-tab="backup">Sauvegarde</button>
 </div>
 <section class="panel active" id="home">
 <div class="welcome-card"><div><div class="welcome-kicker" id="welcomeBrand">MON VTC · ESPACE CHAUFFEUR</div><h2 id="welcomeTitle">Bonjour 👋</h2><p id="welcomeDate">Prêt pour une nouvelle journée ?</p></div><div class="welcome-mark">VTC</div></div>
@@ -223,6 +223,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <div class="metric"><span>CA par heure</span><strong id="kpiHourly">0,00 €</strong><small>CA ÷ heures enregistrées</small></div>
 <div class="metric"><span>Courses</span><strong id="kpiCount">0</strong><small>Courses dans la période</small></div>
 </div>
+<div class="card" id="monthlyStats"><h3>Statistiques du mois</h3><div class="grid"><div class="metric"><span>Recettes du mois</span><strong id="monthRevenue">0,00 €</strong><small>Courses + recettes ajoutées</small></div><div class="metric"><span>Dépenses du mois</span><strong id="monthExpenses">0,00 €</strong><small>Frais enregistrés</small></div><div class="metric"><span>Résultat du mois</span><strong id="monthNet">0,00 €</strong><small>Avant cotisations et impôts</small></div></div><h3>Récapitulatif par semaine</h3><div id="weeklyStats" class="list"></div></div>
 <div class="card"><h3>À savoir</h3><p class="note">Les chiffres sont calculés uniquement à partir des éléments saisis ici. Le « reste » ne déduit pas les cotisations URSSAF, impôts ou frais non enregistrés. Les données sont enregistrées sur ton compte sécurisé lorsque le statut indique « Synchronisé dans le cloud ». Pense à exporter une sauvegarde de temps en temps.</p></div>
 </section>
 <section class="panel" id="rides">
@@ -235,6 +236,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <div class="row"><div><label for="ridePrice">Prix encaissé (€)</label><input id="ridePrice" type="number" min="0" step="0.01" placeholder="35,00" required></div><div><label for="ridePayment">Paiement</label><select id="ridePayment"><option>Virement</option><option>Espèces</option><option>Carte</option><option>Autre</option></select></div></div>
 <label for="rideNotes">Notes (facultatif)</label><textarea id="rideNotes" placeholder="Informations utiles…"></textarea><button class="primary">Enregistrer la course</button>
 </form><h2>Historique des courses</h2><div id="rideList" class="list"></div>
+</section>
+<section class="panel" id="revenues">
+<h2>Ajouter une recette complémentaire</h2>
+<div class="card"><p class="note">Les courses saisies dans l’onglet Courses sont comptées automatiquement. Ici, ajoute les autres recettes une par une avec leur date pour les rattacher à la bonne semaine.</p><form id="revenueForm">
+<div class="row"><div><label for="revenueDate">Date de la recette</label><input id="revenueDate" type="date" required></div><div><label for="revenueAmount">Montant (€)</label><input id="revenueAmount" type="number" min="0.01" step="0.01" required placeholder="25,00"></div></div>
+<label for="revenueCategory">Origine</label><select id="revenueCategory"><option>Prime / bonus</option><option>Pourboire non inclus dans une course</option><option>Prestation complémentaire</option><option>Remboursement reçu</option><option>Autre</option></select>
+<label for="revenueDescription">Description</label><input id="revenueDescription" placeholder="Ex. bonus Uber de la semaine" required><button class="primary">Enregistrer cette recette</button></form></div><h2>Historique des recettes complémentaires</h2><div id="revenueList" class="list"></div>
 </section>
 <section class="panel" id="expenses">
 <h2>Ajouter une dépense</h2>
@@ -310,9 +318,9 @@ const SUPABASE_KEY='sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sb-dvdbzaneegpgolvioybh-auth-token'}});
 let currentSession=null,saveQueue=Promise.resolve(),authReady=false;
 const KEY='monVtcDataV2';const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-const blank=()=>({clients:[],rides:[],expenses:[],documents:[],settings:{},counters:{reservation:0,quote:0,invoice:0}});
+const blank=()=>({clients:[],rides:[],expenses:[],extraRevenues:[],documents:[],settings:{},counters:{reservation:0,quote:0,invoice:0}});
 let db=blank();
-db.clients ||= [];db.rides ||= [];db.expenses ||= [];db.documents ||= [];db.settings ||= {};db.counters ||= {reservation:0,quote:0,invoice:0};
+db.clients ||= [];db.rides ||= [];db.expenses ||= [];db.extraRevenues ||= [];db.documents ||= [];db.settings ||= {};db.counters ||= {reservation:0,quote:0,invoice:0};
 function save(){render();if(!currentSession)return;const snapshot=JSON.parse(JSON.stringify(db));const uid=currentSession.user.id;saveQueue=saveQueue.then(async()=>{const {error}=await supabaseClient.from('vtc_user_data').upsert({user_id:uid,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error){document.getElementById('cloudStatus').textContent='Erreur de synchronisation';console.error(error)}else{document.getElementById('cloudStatus').textContent='Synchronisé dans le cloud'}}).catch(err=>{console.error(err);document.getElementById('cloudStatus').textContent='Erreur de synchronisation'});}
 
 const authGate=document.getElementById('authGate'),appShell=document.getElementById('appShell'),accountBar=document.getElementById('accountBar'),authMessage=document.getElementById('authMessage');
@@ -320,7 +328,7 @@ function showSignedOut(message=''){currentSession=null;authGate.style.display='b
 async function showSignedIn(session){currentSession=session;authGate.style.display='none';appShell.style.display='block';accountBar.style.display='flex';document.getElementById('accountEmail').textContent=session.user.email||'Compte chauffeur';document.getElementById('cloudStatus').textContent='Chargement des données…';
 const {data,error}=await supabaseClient.from('vtc_user_data').select('data').eq('user_id',session.user.id).maybeSingle();
 if(error){showSignedOut('Impossible de charger les données. Vérifie la connexion puis réessaie.');await supabaseClient.auth.signOut();return}
-if(data&&data.data&&typeof data.data==='object'){db={...blank(),...data.data};db.clients||=[];db.rides||=[];db.expenses||=[];db.documents||=[];db.settings||={};db.counters||={reservation:0,quote:0,invoice:0}}
+if(data&&data.data&&typeof data.data==='object'){db={...blank(),...data.data};db.clients||=[];db.rides||=[];db.expenses||=[];db.extraRevenues||=[];db.documents||=[];db.settings||={};db.counters||={reservation:0,quote:0,invoice:0}}
 else{db=blank();const {error:insertError}=await supabaseClient.from('vtc_user_data').insert({user_id:session.user.id,data:db});if(insertError){showSignedOut('Impossible de créer ton espace privé.');await supabaseClient.auth.signOut();return}}
 loadSettings();render();document.getElementById('cloudStatus').textContent='Données synchronisées';}
 document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('loginButton');btn.disabled=true;btn.textContent='Connexion…';authMessage.textContent='';const {data,error}=await supabaseClient.auth.signInWithPassword({email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});btn.disabled=false;btn.textContent='Se connecter';if(error){authMessage.textContent='Connexion impossible : vérifie l’adresse e-mail et le mot de passe.';return}await showSignedIn(data.session)});
@@ -339,36 +347,49 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>show
 function updateClientSelects(){['rideClient','docClient'].forEach(id=>{const s=document.getElementById(id),old=s.value;s.innerHTML='<option value="">'+(id==='docClient'?'Choisir un client…':'Client non enregistré')+'</option>'+db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');s.value=old})}
 function render(){
  renderToday();
- const p=document.getElementById('period').value;const rides=db.rides.filter(r=>inPeriod(r.date,p)), expenses=db.expenses.filter(e=>inPeriod(e.date,p));
- const revenue=rides.reduce((a,r)=>a+Number(r.price||0),0), costs=expenses.reduce((a,e)=>a+Number(e.amount||0),0), hours=rides.reduce((a,r)=>a+Number(r.minutes||0),0)/60;
+ const p=document.getElementById('period').value;const rides=db.rides.filter(r=>inPeriod(r.date,p)), expenses=db.expenses.filter(e=>inPeriod(e.date,p)), extras=db.extraRevenues.filter(r=>inPeriod(r.date,p));
+ const revenue=rides.reduce((a,r)=>a+Number(r.price||0),0)+extras.reduce((a,r)=>a+Number(r.amount||0),0), costs=expenses.reduce((a,e)=>a+Number(e.amount||0),0), hours=rides.reduce((a,r)=>a+Number(r.minutes||0),0)/60;
  kpiRevenue.textContent=money(revenue);kpiExpenses.textContent=money(costs);kpiNet.textContent=money(revenue-costs);kpiHours.textContent=hours.toLocaleString('fr-FR',{maximumFractionDigits:1})+' h';kpiHourly.textContent=money(hours?revenue/hours:0);kpiCount.textContent=rides.length;
  updateClientSelects();
  rideList.innerHTML=db.rides.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>{const c=db.clients.find(c=>c.id===r.clientId);return `<div class="item"><div class="item-top"><div><strong>${esc(r.name||c?.name||'Course')}</strong><div class="muted">${fmtDate(r.date)} · ${Number(r.minutes||0)} min · ${esc(r.payment||'')}</div><div class="muted">${esc(r.from||'')} ${r.to?'→ '+esc(r.to):''}</div></div><div class="amount">${money(r.price)}</div></div>${r.notes?`<p class="muted">${esc(r.notes)}</p>`:''}<div class="item-actions"><button class="secondary danger" onclick="delItem('rides','${r.id}')">Supprimer</button></div></div>`}).join('')||'<div class="empty">Aucune course enregistrée.</div>';
+ revenueList.innerHTML=db.extraRevenues.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>'<div class="item"><div class="item-top"><div><strong>'+esc(r.description)+'</strong><div class="muted">'+fmtDate(r.date)+' · '+esc(r.category)+'</div></div><div class="amount">'+money(r.amount)+'</div></div><div class="item-actions"><button class="secondary danger" onclick="delItem(\'extraRevenues\',\''+r.id+'\')">Supprimer</button></div></div>').join('')||'<div class="empty">Aucune autre recette enregistrée.</div>';
  expenseList.innerHTML=db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<div class="item"><div class="item-top"><div><strong>${esc(e.description)}</strong><div class="muted">${fmtDate(e.date)} · ${esc(e.category)}</div></div><div class="amount">${money(e.amount)}</div></div><div class="item-actions"><button class="secondary danger" onclick="delItem('expenses','${e.id}')">Supprimer</button></div></div>`).join('')||'<div class="empty">Aucune dépense enregistrée.</div>';
  clientList.innerHTML=db.clients.map(c=>`<div class="item"><div class="item-top"><div><strong>${esc(c.name)}</strong><div class="muted">${esc(c.phone||'')}${c.phone&&c.email?' · ':''}${esc(c.email||'')}<br>${esc(c.address||'')}</div>${c.notes?`<p class="muted">${esc(c.notes)}</p>`:''}</div></div><div class="item-actions"><button class="secondary danger" onclick="delItem('clients','${c.id}')">Supprimer</button></div></div>`).join('')||'<div class="empty">Aucun client enregistré.</div>';
  documentList.innerHTML=db.documents.slice().sort((a,b)=>b.created.localeCompare(a.created)).map(d=>`<div class="item"><div class="item-top"><div><strong>${esc(d.number)} · ${esc(d.typeLabel)}</strong><div class="muted">${fmtDate(d.date)} · ${esc(d.clientName||'Client non renseigné')}</div></div><div class="amount">${money(d.totalTTC??d.total??0)}</div></div><div class="item-actions"><button class="secondary" onclick="reopenDoc('${d.id}')">Afficher / imprimer</button><button class="secondary danger" onclick="delItem('documents','${d.id}')">Supprimer de la liste</button></div></div>`).join('')||'<div class="empty">Aucun document créé.</div>';
 }
 window.delItem=(type,id)=>{if(!confirm('Supprimer cet élément ?'))return;db[type]=db[type].filter(x=>x.id!==id);if(type==='clients'){db.rides.forEach(r=>{if(r.clientId===id)r.clientId=''});db.documents.forEach(d=>{if(d.clientId===id)d.clientId=''})}save()};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-rideDate.value=today();expenseDate.value=today();docDate.value=today();
+rideDate.value=today();expenseDate.value=today();revenueDate.value=today();docDate.value=today();
 period.addEventListener('change',render);
-function openQuickTab(id){showTab(id);const target={rides:'rideDuration',expenses:'expenseAmount',clients:'clientName',documents:'docType'}[id];if(target)setTimeout(()=>document.getElementById(target).focus(),80)}
+function openQuickTab(id){showTab(id);const target={rides:'rideDuration',revenues:'revenueAmount',expenses:'expenseAmount',clients:'clientName',documents:'docType'}[id];if(target)setTimeout(()=>document.getElementById(target).focus(),80)}
 quickRide.addEventListener('click',()=>openQuickTab('rides'));
 quickExpense.addEventListener('click',()=>openQuickTab('expenses'));
 quickClient.addEventListener('click',()=>openQuickTab('clients'));
 quickDocument.addEventListener('click',()=>openQuickTab('documents'));
+function renderMonthlyStats(){
+ const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+ const inMonth=d=>{if(!d)return false;const x=new Date(d+'T12:00:00');return x.getFullYear()===y&&x.getMonth()===m};
+ const mr=db.rides.filter(r=>inMonth(r.date)).reduce((s,r)=>s+Number(r.price||0),0)+db.extraRevenues.filter(r=>inMonth(r.date)).reduce((s,r)=>s+Number(r.amount||0),0);
+ const me=db.expenses.filter(e=>inMonth(e.date)).reduce((s,e)=>s+Number(e.amount||0),0);
+ monthRevenue.textContent=money(mr);monthExpenses.textContent=money(me);monthNet.textContent=money(mr-me);
+ const first=new Date(y,m,1),last=new Date(y,m+1,0),weeks=[];
+ for(let start=new Date(first);start<=last;){const end=new Date(start);end.setDate(end.getDate()+6);if(end>last)end.setTime(last.getTime());const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const from=fmt(start),to=fmt(end),match=d=>d>=from&&d<=to;const r=db.rides.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.price||0),0)+db.extraRevenues.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.amount||0),0);const ex=db.expenses.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.amount||0),0);weeks.push({from,to,r,ex});start=new Date(end);start.setDate(start.getDate()+1)}
+ weeklyStats.innerHTML=weeks.map((w,i)=>'<div class="item"><div class="item-top"><div><strong>Semaine '+(i+1)+'</strong><div class="muted">Du '+fmtDate(w.from)+' au '+fmtDate(w.to)+'</div></div><div class="amount">'+money(w.r-w.ex)+'</div></div><div class="muted">Recettes : '+money(w.r)+' · Dépenses : '+money(w.ex)+'</div></div>').join('')||'<div class="empty">Aucune donnée pour ce mois.</div>';
+}
 function renderToday(){
  const brand=(db.settings.bizName||'Mon VTC').trim();welcomeBrand.textContent=brand.toLocaleUpperCase('fr-FR')+' · ESPACE CHAUFFEUR';
- const t=today(),tr=db.rides.filter(r=>r.date===t),te=db.expenses.filter(e=>e.date===t);
- const rev=tr.reduce((s,r)=>s+Number(r.price||0),0),cost=te.reduce((s,e)=>s+Number(e.amount||0),0);
+ const t=today(),tr=db.rides.filter(r=>r.date===t),te=db.expenses.filter(e=>e.date===t),tx=db.extraRevenues.filter(r=>r.date===t);
+ const rev=tr.reduce((s,r)=>s+Number(r.price||0),0)+tx.reduce((s,r)=>s+Number(r.amount||0),0),cost=te.reduce((s,e)=>s+Number(e.amount||0),0);
  todayRevenue.textContent=money(rev);todayExpenses.textContent=money(cost);
  todayCount.textContent=tr.length+' course'+(tr.length>1?'s':'')+' enregistrée'+(tr.length>1?'s':'');
  todayRideLabel.textContent=tr.length?('Reste après frais du jour : '+money(rev-cost)):'Vos premières courses apparaîtront ici';
+ renderMonthlyStats();
  const d=new Date();welcomeTitle.textContent=(d.getHours()<12?'Bonjour 👋':d.getHours()<18?'Bon après-midi 👋':'Bonsoir 👋');
  welcomeDate.textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · Votre activité, en un coup d’œil';
 }
 rideForm.addEventListener('submit',e=>{e.preventDefault();db.rides.push({id:uid(),date:rideDate.value,minutes:Number(rideDuration.value),clientId:rideClient.value,name:rideName.value.trim(),from:rideFrom.value.trim(),to:rideTo.value.trim(),price:Number(ridePrice.value),payment:ridePayment.value,notes:rideNotes.value.trim()});e.target.reset();rideDate.value=today();save();showTab('rides')});
 expenseForm.addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:uid(),date:expenseDate.value,amount:Number(expenseAmount.value),category:expenseCategory.value,description:expenseDescription.value.trim()});e.target.reset();expenseDate.value=today();save();showTab('expenses')});
+revenueForm.addEventListener('submit',e=>{e.preventDefault();db.extraRevenues.push({id:uid(),date:revenueDate.value,amount:Number(revenueAmount.value),category:revenueCategory.value,description:revenueDescription.value.trim()});e.target.reset();revenueDate.value=today();save();showTab('revenues')});
 clientForm.addEventListener('submit',e=>{e.preventDefault();db.clients.push({id:uid(),name:clientName.value.trim(),phone:clientPhone.value.trim(),email:clientEmail.value.trim(),address:clientAddress.value.trim(),notes:clientNotes.value.trim()});e.target.reset();save();showTab('clients')});
 const settingIds=['bizName','bizAddress','bizPhone','bizEmail','bizSiren','bizRevtc','bizVehicle','bizVat','bizVatNote','bizPaymentTerms','bizNoDiscount','bizLateRate','bizPaymentDays'];
 function loadSettings(){settingIds.forEach(id=>document.getElementById(id).value=db.settings[id]||'')}
