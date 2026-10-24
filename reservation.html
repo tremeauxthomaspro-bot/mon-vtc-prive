@@ -50,6 +50,7 @@ footer{text-align:center;color:#8a93a0;font-size:11px;margin:18px 10px 0}
     <form id="bookingForm">
       <label class="trap" aria-hidden="true">Ne pas remplir<input name="website" tabindex="-1" autocomplete="off"></label>
       <div class="grid">
+        <div class="full"><label for="driver_slug">Choisissez votre chauffeur *</label><select id="driver_slug" name="driver_slug" required><option value="">Chargement des chauffeurs…</option></select></div>
         <div class="full"><label for="client_name">Nom et prénom *</label><input id="client_name" name="client_name" required maxlength="120" autocomplete="name" placeholder="Votre nom"></div>
         <div><label for="client_phone">Téléphone *</label><input id="client_phone" name="client_phone" type="tel" required maxlength="40" autocomplete="tel" placeholder="06 00 00 00 00"></div>
         <div><label for="client_email">E-mail</label><input id="client_email" name="client_email" type="email" maxlength="254" autocomplete="email" placeholder="vous@exemple.fr"></div>
@@ -71,7 +72,8 @@ footer{text-align:center;color:#8a93a0;font-size:11px;margin:18px 10px 0}
 const SUPABASE_URL = "https://dvdbzaneegpgolvioybh.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_tOYIlu5gDufGjtfU1xHvHQ_tA8-C3xY";
 const params = new URLSearchParams(location.search);
-const slug = (params.get("chauffeur") || "").trim().toLowerCase();
+const driverSelect = document.getElementById("driver_slug");
+let slug = (params.get("chauffeur") || "").trim().toLowerCase();
 const form = document.getElementById("bookingForm");
 const button = document.getElementById("submitButton");
 const statusBox = document.getElementById("status");
@@ -79,17 +81,41 @@ const dateInput = document.getElementById("pickup_date");
 const today = new Date();
 dateInput.min = new Date(today.getTime() - today.getTimezoneOffset()*60000).toISOString().slice(0,10);
 
-if (!slug || !/^[a-z0-9-]{3,50}$/.test(slug)) {
-  document.getElementById("driverLine").textContent = "Le lien de réservation est incomplet. Merci d'utiliser le lien transmis par votre chauffeur.";
-  button.disabled = true;
+async function loadDrivers() {
+  try {
+    const response = await fetch(SUPABASE_URL + "/functions/v1/list-public-vtc-drivers", { headers: { "apikey": SUPABASE_PUBLISHABLE_KEY } });
+    const result = await response.json();
+    if (!response.ok || !Array.isArray(result.drivers)) throw new Error("Chargement impossible");
+    driverSelect.innerHTML = '<option value="">Sélectionnez votre chauffeur</option>';
+    for (const driver of result.drivers) {
+      const option = document.createElement("option");
+      option.value = driver.slug;
+      option.textContent = driver.display_name;
+      driverSelect.appendChild(option);
+    }
+    if (slug && result.drivers.some(d => d.slug === slug)) driverSelect.value = slug;
+    if (!result.drivers.length) {
+      driverSelect.innerHTML = '<option value="">Aucun chauffeur disponible</option>';
+      button.disabled = true;
+      document.getElementById("driverLine").textContent = "Aucun chauffeur n'est disponible pour le moment.";
+    } else {
+      document.getElementById("driverLine").textContent = "Choisissez votre chauffeur puis renseignez votre trajet.";
+    }
+  } catch (error) {
+    driverSelect.innerHTML = '<option value="">Impossible de charger les chauffeurs</option>';
+    button.disabled = true;
+    document.getElementById("driverLine").textContent = "Impossible de charger les chauffeurs. Actualisez la page.";
+  }
 }
+loadDrivers();
 function showStatus(message, type) {
   statusBox.textContent = message;
   statusBox.className = "status " + type;
 }
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!slug) return;
+  slug = driverSelect.value.trim().toLowerCase();
+  if (!slug) { showStatus("Veuillez choisir un chauffeur.", "err"); return; }
   if (dateInput.value < dateInput.min) {
     showStatus("Choisissez une date à partir d'aujourd'hui.", "err");
     return;
@@ -114,7 +140,14 @@ form.addEventListener("submit", async (event) => {
     if (!response.ok || !result.ok) throw new Error(result.error || "L'envoi a échoué. Réessayez.");
     form.reset();
     dateInput.min = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
-    showStatus("Votre demande a bien été envoyée. Elle reste en attente jusqu'à confirmation du chauffeur.", "ok");
+    const quote = result.route;
+    let confirmation = "Votre demande a bien été envoyée. Elle reste en attente jusqu'à confirmation du chauffeur.";
+    if (quote && quote.estimated_price !== null && quote.estimated_price !== undefined) {
+      confirmation += " Estimation automatique : " + quote.estimated_price + " € (à confirmer par le chauffeur).";
+    } else if (quote && quote.requires_manual_confirmation) {
+      confirmation += " Ce trajet nécessite un tarif confirmé manuellement par le chauffeur.";
+    }
+    showStatus(confirmation, "ok");
   } catch (error) {
     showStatus(error.message || "Impossible d'envoyer la demande pour le moment.", "err");
   } finally {
