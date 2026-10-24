@@ -245,11 +245,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <label for="revenueDescription">Description</label><input id="revenueDescription" placeholder="Ex. bonus Uber de la semaine" required><button class="primary">Enregistrer cette recette</button></form></div><h2>Historique des recettes complémentaires</h2><div id="revenueList" class="list"></div>
 </section>
 <section class="panel" id="expenses">
-<h2>Ajouter une dépense</h2>
+<h2>Saisir les dépenses de la semaine</h2>
+<p class="muted">Renseigne les catégories que tu as utilisées. Laisse les autres à 0 € : tout sera enregistré en une seule fois.</p>
 <form id="expenseForm" class="card">
-<div class="row"><div><label for="expenseDate">Date</label><input id="expenseDate" type="date" required></div><div><label for="expenseAmount">Montant (€)</label><input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="12,50"></div></div>
-<label for="expenseCategory">Catégorie</label><select id="expenseCategory"><option>Recharge / carburant</option><option>Péage / parking</option><option>Entretien / réparation</option><option>Assurance</option><option>Téléphone / abonnement</option><option>Nettoyage</option><option>Autre</option></select>
-<label for="expenseDescription">Description</label><input id="expenseDescription" placeholder="Ex. recharge du 11 octobre" required><button class="primary">Enregistrer la dépense</button>
+<label for="expenseDate">Semaine / date de référence</label><input id="expenseDate" type="date" required>
+<div class="row"><div><label for="expenseFuel">Recharge / carburant (€)</label><input id="expenseFuel" type="number" min="0" step="0.01" value="0" placeholder="0"></div><div><label for="expenseToll">Péage / parking (€)</label><input id="expenseToll" type="number" min="0" step="0.01" value="0" placeholder="0"></div></div>
+<div class="row"><div><label for="expenseMaintenance">Entretien / réparation (€)</label><input id="expenseMaintenance" type="number" min="0" step="0.01" value="0" placeholder="0"></div><div><label for="expenseInsurance">Assurance (€)</label><input id="expenseInsurance" type="number" min="0" step="0.01" value="0" placeholder="0"></div></div>
+<div class="row"><div><label for="expensePhone">Téléphone / abonnement (€)</label><input id="expensePhone" type="number" min="0" step="0.01" value="0" placeholder="0"></div><div><label for="expenseCleaning">Nettoyage (€)</label><input id="expenseCleaning" type="number" min="0" step="0.01" value="0" placeholder="0"></div></div>
+<div class="row"><div><label for="expenseOther">Autres dépenses (€)</label><input id="expenseOther" type="number" min="0" step="0.01" value="0" placeholder="0"></div><div><label for="expenseDescription">Note (facultatif)</label><input id="expenseDescription" placeholder="Ex. semaine chargée"></div></div>
+<button class="primary">Enregistrer toutes les dépenses</button>
 </form><h2>Historique des dépenses</h2><div id="expenseList" class="list"></div>
 </section>
 <section class="panel" id="clients">
@@ -388,7 +392,7 @@ function renderToday(){
  welcomeDate.textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · Votre activité, en un coup d’œil';
 }
 rideForm.addEventListener('submit',e=>{e.preventDefault();db.rides.push({id:uid(),date:rideDate.value,minutes:Number(rideDuration.value),clientId:rideClient.value,name:rideName.value.trim(),from:rideFrom.value.trim(),to:rideTo.value.trim(),price:Number(ridePrice.value),payment:ridePayment.value,notes:rideNotes.value.trim()});e.target.reset();rideDate.value=today();save();showTab('rides')});
-expenseForm.addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:uid(),date:expenseDate.value,amount:Number(expenseAmount.value),category:expenseCategory.value,description:expenseDescription.value.trim()});e.target.reset();expenseDate.value=today();save();showTab('expenses')});
+expenseForm.addEventListener('submit',e=>{e.preventDefault();const items=[['Recharge / carburant',expenseFuel.value],['Péage / parking',expenseToll.value],['Entretien / réparation',expenseMaintenance.value],['Assurance',expenseInsurance.value],['Téléphone / abonnement',expensePhone.value],['Nettoyage',expenseCleaning.value],['Autre',expenseOther.value]].map(([category,value])=>({category,amount:Number(value||0)})).filter(x=>x.amount>0);if(!items.length){alert('Saisis au moins un montant supérieur à 0 €');return}const note=expenseDescription.value.trim();items.forEach(x=>db.expenses.push({id:uid(),date:expenseDate.value,amount:x.amount,category:x.category,description:note||'Saisie hebdomadaire'}));e.target.reset();expenseDate.value=today();['expenseFuel','expenseToll','expenseMaintenance','expenseInsurance','expensePhone','expenseCleaning','expenseOther'].forEach(id=>document.getElementById(id).value='0');save();showTab('expenses')});
 revenueForm.addEventListener('submit',e=>{e.preventDefault();db.extraRevenues.push({id:uid(),date:revenueDate.value,amount:Number(revenueAmount.value),category:revenueCategory.value,description:revenueDescription.value.trim()});e.target.reset();revenueDate.value=today();save();showTab('revenues')});
 clientForm.addEventListener('submit',e=>{e.preventDefault();db.clients.push({id:uid(),name:clientName.value.trim(),phone:clientPhone.value.trim(),email:clientEmail.value.trim(),address:clientAddress.value.trim(),notes:clientNotes.value.trim()});e.target.reset();save();showTab('clients')});
 const settingIds=['bizName','bizAddress','bizPhone','bizEmail','bizSiren','bizRevtc','bizVehicle','bizVat','bizVatNote','bizPaymentTerms','bizNoDiscount','bizLateRate','bizPaymentDays'];
