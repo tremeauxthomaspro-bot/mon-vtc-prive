@@ -241,7 +241,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <h2>Ajouter une recette complémentaire</h2>
 <div class="card"><p class="note">Les courses saisies dans l’onglet Courses sont comptées automatiquement. Ici, ajoute les autres recettes une par une avec leur date pour les rattacher à la bonne semaine.</p><form id="revenueForm">
 <div class="row"><div><label for="revenueDate">Date de la recette</label><input id="revenueDate" type="date" required></div><div><label for="revenueAmount">Montant (€)</label><input id="revenueAmount" type="number" min="0.01" step="0.01" required placeholder="25,00"></div></div>
-<label for="revenueCategory">Origine</label><select id="revenueCategory"><option>Prime / bonus</option><option>Pourboire non inclus dans une course</option><option>Prestation complémentaire</option><option>Remboursement reçu</option><option>Autre</option></select>
+<label for="revenueCategory">Origine</label><select id="revenueCategory"><option>Uber / Bolt</option><option>Prime / bonus</option><option>Pourboire non inclus dans une course</option><option>Prestation complémentaire</option><option>Remboursement reçu</option><option>Autre</option></select>
 <label for="revenueDescription">Description</label><input id="revenueDescription" placeholder="Ex. bonus Uber de la semaine" required><button class="primary">Enregistrer cette recette</button></form></div><h2>Historique des recettes complémentaires</h2><div id="revenueList" class="list"></div>
 </section>
 <section class="panel" id="expenses">
