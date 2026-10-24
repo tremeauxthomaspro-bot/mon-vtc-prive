@@ -246,7 +246,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <section class="panel" id="expenses">
 <h2>Saisir les dépenses de la semaine</h2>
 <p class="muted">Renseigne les catégories que tu as utilisées. Laisse les autres à 0 € : tout sera enregistré en une seule fois.</p>
-<div class="card"><h3>Dépenses récurrentes mensuelles</h3><p class="note">Ajoute ici les frais fixes (assurance, téléphone, abonnement…). Ils seront ajoutés automatiquement une seule fois chaque mois.</p><form id="recurringForm"><label for="recurringName">Nom de la dépense</label><input id="recurringName" required placeholder="Ex. Assurance voiture"><div class="row"><div><label for="recurringAmount">Montant mensuel (€)</label><input id="recurringAmount" type="number" min="0.01" step="0.01" required placeholder="233,00"></div><div><label for="recurringCategory">Catégorie</label><select id="recurringCategory"><option>Assurance</option><option>Téléphone / abonnement</option><option>Recharge / carburant</option><option>Entretien / réparation</option><option>Péage / parking</option><option>Nettoyage</option><option>Autre</option></select></div></div><button class="primary">Ajouter une dépense récurrente</button></form><div id="recurringList" class="list"></div></div>
+<div class="card"><h3>Dépenses récurrentes mensuelles</h3><p class="note">Ajoute ici les frais fixes (assurance, téléphone, abonnement…). Choisis la date du prochain prélèvement : la dépense ne sera comptée qu’à partir de cette date, puis chaque mois.</p><form id="recurringForm"><label for="recurringName">Nom de la dépense</label><input id="recurringName" required placeholder="Ex. Assurance voiture"><div class="row"><div><label for="recurringAmount">Montant mensuel (€)</label><input id="recurringAmount" type="number" min="0.01" step="0.01" required placeholder="233,00"></div><div><label for="recurringCategory">Catégorie</label><select id="recurringCategory"><option>Assurance</option><option>Téléphone / abonnement</option><option>Recharge / carburant</option><option>Entretien / réparation</option><option>Péage / parking</option><option>Nettoyage</option><option>Autre</option></select></div></div><label for="recurringStartDate">Date du prochain prélèvement</label><input id="recurringStartDate" type="date" required><button class="primary">Ajouter une dépense récurrente</button></form><div id="recurringList" class="list"></div></div>
 <form id="expenseForm" class="card">
 <label for="expenseDate">Semaine / date de référence</label><input id="expenseDate" type="date" required>
 <div class="row"><div><label for="expenseFuel">Recharge / carburant (€)</label><input id="expenseFuel" type="number" min="0" step="0.01" value="0" placeholder="0"></div><div><label for="expenseToll">Péage / parking (€)</label><input id="expenseToll" type="number" min="0" step="0.01" value="0" placeholder="0"></div></div>
@@ -365,7 +365,7 @@ function render(){
 }
 window.delItem=(type,id)=>{if(!confirm('Supprimer cet élément ?'))return;db[type]=db[type].filter(x=>x.id!==id);if(type==='clients'){db.rides.forEach(r=>{if(r.clientId===id)r.clientId=''});db.documents.forEach(d=>{if(d.clientId===id)d.clientId=''})}save()};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-rideDate.value=today();expenseDate.value=today();revenueDate.value=today();docDate.value=today();
+rideDate.value=today();expenseDate.value=today();revenueDate.value=today();docDate.value=today();recurringStartDate.value=today();
 period.addEventListener('change',render);
 function openQuickTab(id){showTab(id);const target={rides:'rideDuration',revenues:'revenueAmount',expenses:'expenseAmount',clients:'clientName',documents:'docType'}[id];if(target)setTimeout(()=>document.getElementById(target).focus(),80)}
 quickRide.addEventListener('click',()=>openQuickTab('rides'));
@@ -403,20 +403,28 @@ function renderToday(){
 rideForm.addEventListener('submit',e=>{e.preventDefault();db.rides.push({id:uid(),date:rideDate.value,minutes:Number(rideDuration.value),clientId:rideClient.value,name:rideName.value.trim(),from:rideFrom.value.trim(),to:rideTo.value.trim(),price:Number(ridePrice.value),payment:ridePayment.value,notes:rideNotes.value.trim()});e.target.reset();rideDate.value=today();save();showTab('rides')});
 function syncRecurringExpenses(){
  if(!Array.isArray(db.recurringExpenses))db.recurringExpenses=[];
- const month=today().slice(0,7);let changed=false;
+ const currentDate=today(),currentMonth=currentDate.slice(0,7);let changed=false;
  db.recurringExpenses.forEach(r=>{
   if(!Array.isArray(r.generatedMonths))r.generatedMonths=[];
-  if(!r.generatedMonths.includes(month)){
-   const lastDay=new Date(Number(month.slice(0,4)),Number(month.slice(5,7)),0).getDate();
-   const day=Math.min(Number(r.day||1),lastDay);
-   db.expenses.push({id:uid(),date:month+'-'+String(day).padStart(2,'0'),amount:Number(r.amount||0),category:r.category,description:r.name+' (récurrent)'});
-   r.generatedMonths.push(month);changed=true;
+  const startDate=r.startDate||(currentMonth+'-'+String(r.day||1).padStart(2,'0'));
+  if(currentDate<startDate)return;
+  const startMonth=startDate.slice(0,7),[sy,sm]=startMonth.split('-').map(Number),[cy,cm]=currentMonth.split('-').map(Number);
+  let year=sy,month=sm;
+  while(year<cy||(year===cy&&month<=cm)){
+   const monthKey=year+'-'+String(month).padStart(2,'0');
+   const lastDay=new Date(year,month,0).getDate(),day=Math.min(Number(startDate.slice(8,10)),lastDay);
+   const dueDate=monthKey+'-'+String(day).padStart(2,'0');
+   if(dueDate<=currentDate&&!r.generatedMonths.includes(monthKey)){
+    db.expenses.push({id:uid(),date:dueDate,amount:Number(r.amount||0),category:r.category,description:r.name+' (récurrent)'});
+    r.generatedMonths.push(monthKey);changed=true;
+   }
+   month++;if(month>12){month=1;year++;}
   }
  });
  if(changed&&currentSession){const snapshot=JSON.parse(JSON.stringify(db)),uidNow=currentSession.user.id;saveQueue=saveQueue.then(async()=>{const {error}=await supabaseClient.from('vtc_user_data').upsert({user_id:uidNow,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)document.getElementById('cloudStatus').textContent='Erreur de synchronisation';else document.getElementById('cloudStatus').textContent='Synchronisé dans le cloud'}).catch(()=>{document.getElementById('cloudStatus').textContent='Erreur de synchronisation'});}
 }
 window.deleteRecurring=id=>{if(!confirm('Supprimer cette dépense récurrente ? Les dépenses déjà créées resteront dans l’historique.'))return;db.recurringExpenses=db.recurringExpenses.filter(r=>r.id!==id);save()};
-recurringForm.addEventListener('submit',e=>{e.preventDefault();db.recurringExpenses.push({id:uid(),name:recurringName.value.trim(),amount:Number(recurringAmount.value),category:recurringCategory.value,day:Number(today().slice(8,10)),generatedMonths:[]});e.target.reset();save();showTab('expenses')});
+recurringForm.addEventListener('submit',e=>{e.preventDefault();if(recurringStartDate.value<today()){alert('Choisis aujourd’hui ou une date future pour le prochain prélèvement.');return}db.recurringExpenses.push({id:uid(),name:recurringName.value.trim(),amount:Number(recurringAmount.value),category:recurringCategory.value,startDate:recurringStartDate.value,day:Number(recurringStartDate.value.slice(8,10)),generatedMonths:[]});e.target.reset();recurringStartDate.value=today();save();showTab('expenses')});
 expenseForm.addEventListener('submit',e=>{e.preventDefault();const items=[['Recharge / carburant',expenseFuel.value],['Péage / parking',expenseToll.value],['Entretien / réparation',expenseMaintenance.value],['Assurance',expenseInsurance.value],['Téléphone / abonnement',expensePhone.value],['Nettoyage',expenseCleaning.value],['Autre',expenseOther.value]].map(([category,value])=>({category,amount:Number(value||0)})).filter(x=>x.amount>0);if(!items.length){alert('Saisis au moins un montant supérieur à 0 €');return}const note=expenseDescription.value.trim();items.forEach(x=>db.expenses.push({id:uid(),date:expenseDate.value,amount:x.amount,category:x.category,description:note||'Saisie hebdomadaire'}));e.target.reset();expenseDate.value=today();['expenseFuel','expenseToll','expenseMaintenance','expenseInsurance','expensePhone','expenseCleaning','expenseOther'].forEach(id=>document.getElementById(id).value='0');save();showTab('expenses')});
 revenueForm.addEventListener('submit',e=>{e.preventDefault();db.extraRevenues.push({id:uid(),date:revenueDate.value,amount:Number(revenueAmount.value),category:revenueCategory.value,description:revenueDescription.value.trim()});e.target.reset();revenueDate.value=today();save();showTab('revenues')});
 clientForm.addEventListener('submit',e=>{e.preventDefault();db.clients.push({id:uid(),name:clientName.value.trim(),phone:clientPhone.value.trim(),email:clientEmail.value.trim(),address:clientAddress.value.trim(),notes:clientNotes.value.trim()});e.target.reset();save();showTab('clients')});
