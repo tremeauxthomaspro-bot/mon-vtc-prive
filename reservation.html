@@ -28,6 +28,7 @@ button{width:100%;border:0;border-radius:12px;background:var(--navy);color:#fff;
 button:disabled{opacity:.6;cursor:wait}
 .small{font-size:11px;color:var(--muted);line-height:1.5;margin:12px 0 0}
 .status{display:none;padding:13px 14px;border-radius:12px;margin-top:14px;font-size:13px;line-height:1.5}
+.fare-preview strong{display:block;margin-bottom:4px}.fare-preview .price{font-size:24px;font-weight:800;color:#72572c;margin:5px 0}
 .status.ok{display:block;background:#edf8f1;border:1px solid #b9e3c7;color:#17663b}
 .status.err{display:block;background:#fff1f0;border:1px solid #f2c3bf;color:#9d2922}
 .trap{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
@@ -56,6 +57,7 @@ footer{text-align:center;color:#8a93a0;font-size:11px;margin:18px 10px 0}
         <div><label for="client_email">E-mail</label><input id="client_email" name="client_email" type="email" maxlength="254" autocomplete="email" placeholder="vous@exemple.fr"></div>
         <div class="full"><label for="pickup_address">Adresse de prise en charge *</label><input id="pickup_address" name="pickup_address" required maxlength="500" autocomplete="street-address" placeholder="Adresse complète, ville"></div>
         <div class="full"><label for="destination_address">Destination *</label><input id="destination_address" name="destination_address" required maxlength="500" placeholder="Adresse d'arrivée, ville"></div>
+        <div class="full fare-preview" id="farePreview" aria-live="polite" style="display:none;border:1px solid #e4e8ee;background:#f8fafc;border-radius:12px;padding:14px;margin-top:12px;font-size:14px;line-height:1.5"></div>
         <div><label for="pickup_date">Date du trajet *</label><input id="pickup_date" name="pickup_date" type="date" required></div>
         <div><label for="pickup_time">Heure de prise en charge *</label><input id="pickup_time" name="pickup_time" type="time" required></div>
         <div class="full"><label for="passengers">Nombre de passagers *</label><select id="passengers" name="passengers"><option value="1">1 passager</option><option value="2">2 passagers</option><option value="3">3 passagers</option><option value="4">4 passagers</option><option value="5">5 passagers</option><option value="6">6 passagers</option><option value="7">7 passagers</option><option value="8">8 passagers</option></select></div>
@@ -108,6 +110,43 @@ async function loadDrivers() {
   }
 }
 loadDrivers();
+const farePreview = document.getElementById("farePreview");
+const pickupInput = document.getElementById("pickup_address");
+const destinationInput = document.getElementById("destination_address");
+let routeRequestId = 0;
+async function updateFarePreview() {
+  const pickup = pickupInput.value.trim();
+  const destination = destinationInput.value.trim();
+  if (pickup.length < 4 || destination.length < 4) {
+    farePreview.style.display = "none";
+    return;
+  }
+  const requestId = ++routeRequestId;
+  farePreview.style.display = "block";
+  farePreview.innerHTML = "<strong>Calcul du trajet…</strong> Recherche de la distance et du tarif estimé.";
+  try {
+    const response = await fetch(SUPABASE_URL + "/functions/v1/calculate-vtc-route", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_PUBLISHABLE_KEY },
+      body: JSON.stringify({ pickup_address: pickup, destination_address: destination })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (requestId !== routeRequestId) return;
+    if (!response.ok || !result.ok) throw new Error(result.error || "Calcul indisponible");
+    if (result.requires_manual_confirmation || result.distance_km > 100) {
+      farePreview.innerHTML = "<strong>Demande particulière — trajet de plus de 100 km</strong>Distance estimée : " + result.distance_km + " km. Le tarif sera étudié et confirmé manuellement par le chauffeur. Aucun prix automatique ne sera affiché pour ce trajet.";
+    } else {
+      farePreview.innerHTML = "<strong>Estimation de votre course</strong><div class='price'>" + Number(result.estimated_price).toFixed(2).replace(".", ",") + " €</div>Distance estimée : " + result.distance_km + " km.<br>Tarif indicatif, à confirmer par le chauffeur.";
+    }
+  } catch (error) {
+    if (requestId !== routeRequestId) return;
+    farePreview.innerHTML = "<strong>Tarif non disponible pour le moment</strong>Vérifiez les adresses (avec ville ou code postal). Le chauffeur pourra confirmer le tarif après réception de la demande.";
+  }
+}
+pickupInput.addEventListener("change", updateFarePreview);
+pickupInput.addEventListener("blur", updateFarePreview);
+destinationInput.addEventListener("change", updateFarePreview);
+destinationInput.addEventListener("blur", updateFarePreview);
 function showStatus(message, type) {
   statusBox.textContent = message;
   statusBox.className = "status " + type;
