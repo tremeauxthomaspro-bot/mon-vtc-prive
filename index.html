@@ -351,12 +351,26 @@ function save(){render();if(!currentSession)return;const snapshot=JSON.parse(JSO
 
 const authGate=document.getElementById('authGate'),appShell=document.getElementById('appShell'),accountBar=document.getElementById('accountBar'),authMessage=document.getElementById('authMessage');
 function showSignedOut(message=''){currentSession=null;authGate.style.display='block';appShell.style.display='none';accountBar.style.display='none';authMessage.textContent=message}
-async function showSignedIn(session){currentSession=session;authGate.style.display='none';appShell.style.display='block';accountBar.style.display='flex';document.getElementById('accountEmail').textContent=session.user.email||'Compte chauffeur';document.getElementById('cloudStatus').textContent='Chargement des données…';
-const {data,error}=await supabaseClient.from('vtc_user_data').select('data').eq('user_id',session.user.id).maybeSingle();
-if(error){showSignedOut('Impossible de charger les données. Vérifie la connexion puis réessaie.');await supabaseClient.auth.signOut();return}
-if(data&&data.data&&typeof data.data==='object'){db={...blank(),...data.data};db.clients||=[];db.rides||=[];db.expenses||=[];db.extraRevenues||=[];db.documents||=[];db.settings||={};db.counters||={reservation:0,quote:0,invoice:0}}
-else{db=blank();const {error:insertError}=await supabaseClient.from('vtc_user_data').insert({user_id:session.user.id,data:db});if(insertError){showSignedOut('Impossible de créer ton espace privé.');await supabaseClient.auth.signOut();return}}
-loadSettings();render();document.getElementById('cloudStatus').textContent='Données synchronisées';}
+async function showSignedIn(session){currentSession=session;authGate.style.display='none';appShell.style.display='block';accountBar.style.display='flex';document.getElementById('accountEmail').textContent=session.user.email||'Compte chauffeur';const status=document.getElementById('cloudStatus');status.textContent='Connexion au cloud…';
+let response;
+try{
+ response=await Promise.race([
+  supabaseClient.from('vtc_user_data').select('data').eq('user_id',session.user.id).maybeSingle(),
+  new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),15000))
+ ]);
+}catch(err){
+ console.error('Mon VTC: chargement cloud',err);
+ status.textContent=err&&err.message==='timeout'?'Chargement trop long : vérifie ta connexion puis actualise.':'Erreur pendant le chargement du cloud';
+ return;
+}
+const {data,error}=response;
+if(error){console.error('Mon VTC: erreur Supabase',error);status.textContent='Erreur de chargement des données';return}
+if(data&&data.data&&typeof data.data==='object'){db={...blank(),...data.data};db.clients||=[];db.rides||=[];db.expenses||=[];db.extraRevenues||=[];db.documents||=[];db.recurringExpenses||=[];db.settings||={};db.counters||={reservation:0,quote:0,invoice:0}}
+else{status.textContent='Aucune sauvegarde trouvée pour ce compte — données non modifiées';return}
+status.textContent='Données reçues, affichage…';
+try{loadSettings();render();status.textContent='Données synchronisées'}
+catch(err){console.error('Mon VTC: erreur affichage',err);status.textContent='Erreur d’affichage : '+String(err&&err.message||'inconnue').slice(0,90)}
+}
 document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('loginButton');btn.disabled=true;btn.textContent='Connexion…';authMessage.textContent='';const {data,error}=await supabaseClient.auth.signInWithPassword({email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});btn.disabled=false;btn.textContent='Se connecter';if(error){authMessage.textContent='Connexion impossible : vérifie l’adresse e-mail et le mot de passe.';return}await showSignedIn(data.session)});
 document.getElementById('logoutButton').addEventListener('click',async()=>{await saveQueue;await supabaseClient.auth.signOut();db=blank();showSignedOut()});
 document.getElementById('resetPassword').addEventListener('click',async()=>{const email=document.getElementById('loginEmail').value.trim();if(!email){authMessage.textContent='Saisis ton adresse e-mail, puis appuie sur « Mot de passe oublié ».';return}const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});authMessage.textContent=error?'Impossible d’envoyer le lien de réinitialisation.':'Si un compte existe pour cette adresse, un e-mail de réinitialisation sera envoyé.'});
