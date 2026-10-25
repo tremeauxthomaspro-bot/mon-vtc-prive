@@ -440,9 +440,9 @@ function renderToday(){
  const brand=(db.settings.bizName||'Mon VTC').trim();document.getElementById('welcomeBrand').textContent=brand.toLocaleUpperCase('fr-FR')+' · ESPACE CHAUFFEUR';
  const t=today(),tr=db.rides.filter(r=>r.date===t),te=db.expenses.filter(e=>e.date===t),tx=db.extraRevenues.filter(r=>r.date===t);
  const rev=tr.reduce((s,r)=>s+Number(r.price||0),0)+tx.reduce((s,r)=>s+Number(r.amount||0),0),cost=te.reduce((s,e)=>s+Number(e.amount||0),0);
- document.getElementById('todayRevenue').textContent=money(rev);document.getElementById('todayExpenses').textContent=money(cost);
- document.getElementById('todayCount').textContent=tr.length+' course'+(tr.length>1?'s':'')+' enregistrée'+(tr.length>1?'s':'');
- document.getElementById('todayRideLabel').textContent=tr.length?('Reste après frais du jour : '+money(rev-cost)):'Vos premières courses apparaîtront ici';
+ const todayRevenueEl=document.getElementById('todayRevenue'),todayExpensesEl=document.getElementById('todayExpenses');if(todayRevenueEl)todayRevenueEl.textContent=money(rev);if(todayExpensesEl)todayExpensesEl.textContent=money(cost);
+ const todayCountEl=document.getElementById('todayCount');if(todayCountEl)todayCountEl.textContent=tr.length+' course'+(tr.length>1?'s':'')+' enregistrée'+(tr.length>1?'s':'');
+ const todayRideLabelEl=document.getElementById('todayRideLabel');if(todayRideLabelEl)todayRideLabelEl.textContent=tr.length?('Reste après frais du jour : '+money(rev-cost)):'Vos premières courses apparaîtront ici';
  renderMonthlyStats();
  renderHomeUpcoming();
  const d=new Date();document.getElementById('welcomeTitle').textContent=(d.getHours()<12?'Bonjour 👋':d.getHours()<18?'Bon après-midi 👋':'Bonsoir 👋');
