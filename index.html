@@ -392,8 +392,8 @@ period.addEventListener('change',render);
 function openQuickTab(id){showTab(id);const target={rides:'rideDuration',revenues:'revenueAmount',expenses:'expenseAmount',clients:'clientName',documents:'docType'}[id];if(target)setTimeout(()=>document.getElementById(target).focus(),80)}
 quickRide.addEventListener('click',()=>openQuickTab('rides'));
 quickExpense.addEventListener('click',()=>openQuickTab('expenses'));
-if(quickClient)quickClient.addEventListener('click',()=>openQuickTab('clients'));
-if(quickDocument)quickDocument.addEventListener('click',()=>openQuickTab('documents'));
+const quickClientButton=document.getElementById('quickClient');if(quickClientButton)quickClientButton.addEventListener('click',()=>openQuickTab('clients'));
+const quickDocumentButton=document.getElementById('quickDocument');if(quickDocumentButton)quickDocumentButton.addEventListener('click',()=>openQuickTab('documents'));
 quickRevenue.addEventListener('click',()=>openQuickTab('revenues'));
 homeAllRides.addEventListener('click',()=>showTab('rides'));
 function renderMonthlyStats(){
