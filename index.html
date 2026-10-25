@@ -420,13 +420,13 @@ function renderMonthlyStats(){
  };
  const current=monthTotals(y,m),previousDate=new Date(y,m-1,1),previous=monthTotals(previousDate.getFullYear(),previousDate.getMonth());
  document.getElementById('homeRevenue').textContent=money(current.r);document.getElementById('homeExpenses').textContent=money(current.ex);document.getElementById('homeAvailable').textContent=money(current.available);
- monthRevenue.textContent=money(current.r);monthExpenses.textContent=money(current.ex);monthNet.textContent=money(current.r-current.ex);monthUrssaf.textContent=money(current.urssaf);monthAvailable.textContent=money(current.available);
- prevMonthRevenue.textContent=money(previous.r);prevMonthAvailable.textContent=money(previous.available);
+ document.getElementById('monthRevenue').textContent=money(current.r);document.getElementById('monthExpenses').textContent=money(current.ex);document.getElementById('monthNet').textContent=money(current.r-current.ex);document.getElementById('monthUrssaf').textContent=money(current.urssaf);document.getElementById('monthAvailable').textContent=money(current.available);
+ document.getElementById('prevMonthRevenue').textContent=money(previous.r);document.getElementById('prevMonthAvailable').textContent=money(previous.available);
  const changeLabel=(currentValue,previousValue)=>{const diff=currentValue-previousValue;if(previousValue===0)return diff===0?'Aucune évolution mesurable':'Nouveau chiffre par rapport au mois précédent';const pct=(diff/Math.abs(previousValue))*100;return (diff>0?'+':'')+money(diff)+' ('+(pct>0?'+':'')+pct.toLocaleString('fr-FR',{maximumFractionDigits:1})+' %) vs mois précédent'};
- revenueChange.textContent=changeLabel(current.r,previous.r);availableChange.textContent=changeLabel(current.available,previous.available);
+ document.getElementById('revenueChange').textContent=changeLabel(current.r,previous.r);document.getElementById('availableChange').textContent=changeLabel(current.available,previous.available);
  const first=new Date(y,m,1),last=new Date(y,m+1,0),weeks=[];
  for(let start=new Date(first);start<=last;){const end=new Date(start);end.setDate(end.getDate()+6);if(end>last)end.setTime(last.getTime());const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const from=fmt(start),to=fmt(end),match=d=>d>=from&&d<=to;const r=db.rides.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.price||0),0)+db.extraRevenues.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.amount||0),0);const ex=db.expenses.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.amount||0),0);weeks.push({from,to,r,ex});start=new Date(end);start.setDate(start.getDate()+1)}
- weeklyStats.innerHTML=weeks.map((w,i)=>'<div class="item"><div class="item-top"><div><strong>Semaine '+(i+1)+'</strong><div class="muted">Du '+fmtDate(w.from)+' au '+fmtDate(w.to)+'</div></div><div class="amount">'+money(w.r-w.ex)+'</div></div><div class="muted">Recettes : '+money(w.r)+' · Dépenses : '+money(w.ex)+'</div></div>').join('')||'<div class="empty">Aucune donnée pour ce mois.</div>';
+ document.getElementById('weeklyStats').innerHTML=weeks.map((w,i)=>'<div class="item"><div class="item-top"><div><strong>Semaine '+(i+1)+'</strong><div class="muted">Du '+fmtDate(w.from)+' au '+fmtDate(w.to)+'</div></div><div class="amount">'+money(w.r-w.ex)+'</div></div><div class="muted">Recettes : '+money(w.r)+' · Dépenses : '+money(w.ex)+'</div></div>').join('')||'<div class="empty">Aucune donnée pour ce mois.</div>';
 }
 function renderHomeUpcoming(){
  const t=today();
@@ -437,16 +437,16 @@ function renderHomeUpcoming(){
  }).join('')||'<div class="empty">Aucune course à venir enregistrée pour le moment.</div>';
 }
 function renderToday(){
- const brand=(db.settings.bizName||'Mon VTC').trim();welcomeBrand.textContent=brand.toLocaleUpperCase('fr-FR')+' · ESPACE CHAUFFEUR';
+ const brand=(db.settings.bizName||'Mon VTC').trim();document.getElementById('welcomeBrand').textContent=brand.toLocaleUpperCase('fr-FR')+' · ESPACE CHAUFFEUR';
  const t=today(),tr=db.rides.filter(r=>r.date===t),te=db.expenses.filter(e=>e.date===t),tx=db.extraRevenues.filter(r=>r.date===t);
  const rev=tr.reduce((s,r)=>s+Number(r.price||0),0)+tx.reduce((s,r)=>s+Number(r.amount||0),0),cost=te.reduce((s,e)=>s+Number(e.amount||0),0);
- todayRevenue.textContent=money(rev);todayExpenses.textContent=money(cost);
- todayCount.textContent=tr.length+' course'+(tr.length>1?'s':'')+' enregistrée'+(tr.length>1?'s':'');
- todayRideLabel.textContent=tr.length?('Reste après frais du jour : '+money(rev-cost)):'Vos premières courses apparaîtront ici';
+ document.getElementById('todayRevenue').textContent=money(rev);document.getElementById('todayExpenses').textContent=money(cost);
+ document.getElementById('todayCount').textContent=tr.length+' course'+(tr.length>1?'s':'')+' enregistrée'+(tr.length>1?'s':'');
+ document.getElementById('todayRideLabel').textContent=tr.length?('Reste après frais du jour : '+money(rev-cost)):'Vos premières courses apparaîtront ici';
  renderMonthlyStats();
  renderHomeUpcoming();
- const d=new Date();welcomeTitle.textContent=(d.getHours()<12?'Bonjour 👋':d.getHours()<18?'Bon après-midi 👋':'Bonsoir 👋');
- welcomeDate.textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · Votre activité, en un coup d’œil';
+ const d=new Date();document.getElementById('welcomeTitle').textContent=(d.getHours()<12?'Bonjour 👋':d.getHours()<18?'Bon après-midi 👋':'Bonsoir 👋');
+ document.getElementById('welcomeDate').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · Votre activité, en un coup d’œil';
 }
 rideForm.addEventListener('submit',e=>{e.preventDefault();db.rides.push({id:uid(),date:rideDate.value,minutes:Number(rideDuration.value),clientId:rideClient.value,name:rideName.value.trim(),from:rideFrom.value.trim(),to:rideTo.value.trim(),price:Number(ridePrice.value),payment:ridePayment.value,notes:rideNotes.value.trim()});e.target.reset();rideDate.value=today();save();showTab('rides')});
 function syncRecurringExpenses(){
