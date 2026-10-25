@@ -187,6 +187,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 }
 </style>
 
+
+<style id="home-cleanup">
+.home-section-title{margin:2px 0 12px}
+.home-summary-grid{margin-bottom:16px}
+.home-summary-metric{min-height:105px;padding:15px}
+.home-summary-metric strong{font-size:clamp(19px,4vw,25px)}
+.home-available{border-color:#d9c59c;background:linear-gradient(145deg,#fffdf8,#fff)}
+.home-available strong{color:#8d6934}
+.home-upcoming .today-heading{margin-bottom:12px}
+.home-upcoming .today-heading h3{font-size:16px}
+.home-upcoming .secondary{padding:8px 11px}
+.details-card{padding:15px}
+.details-card>summary{font-size:14px;font-weight:800;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.details-card>summary::-webkit-details-marker{display:none}
+.details-card>summary:after{content:"＋";font-size:20px;color:#9b7841}
+.details-card[open]>summary:after{content:"−"}
+.details-card[open]>summary{padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.details-card>.card{box-shadow:none}
+@media(min-width:600px){.home-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
 </head>
 <body>
 <section id="authGate">
@@ -210,10 +230,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 </div>
 <section class="panel active" id="home">
 <div class="welcome-card"><div><div class="welcome-kicker" id="welcomeBrand">MON VTC · ESPACE CHAUFFEUR</div><h2 id="welcomeTitle">Bonjour 👋</h2><p id="welcomeDate">Prêt pour une nouvelle journée ?</p></div><div class="welcome-mark">VTC</div></div>
-<div class="quick-actions no-print"><button type="button" class="quick-main" id="quickRide"><span class="quick-plus">＋</span><span><strong>Ajouter une course</strong><small>Enregistrer un trajet en quelques secondes</small></span><span class="quick-arrow">›</span></button><div class="quick-grid"><button type="button" class="quick-small" id="quickExpense"><span>↗</span>Ajouter une dépense</button><button type="button" class="quick-small" id="quickClient"><span>♙</span>Nouveau client</button><button type="button" class="quick-small" id="quickDocument"><span>▤</span>Créer un document</button></div></div>
-<div class="today-heading"><h3>Aujourd’hui</h3><span id="todayRideLabel">Votre journée en un coup d’œil</span></div>
-<div class="grid today-grid"><div class="metric today-metric"><span>CA du jour</span><strong id="todayRevenue">0,00 €</strong><small id="todayCount">0 course enregistrée</small></div><div class="metric today-metric"><span>Dépenses du jour</span><strong id="todayExpenses">0,00 €</strong><small>Frais enregistrés aujourd’hui</small></div></div>
-<h2>Mon activité</h2>
+<div class="quick-actions no-print"><button type="button" class="quick-main" id="quickRide"><span class="quick-plus">＋</span><span><strong>Ajouter une course</strong><small>Enregistrer un trajet en quelques secondes</small></span><span class="quick-arrow">›</span></button><div class="quick-grid"><button type="button" class="quick-small" id="quickExpense"><span>↗</span>Ajouter une dépense</button><button type="button" class="quick-small" id="quickRevenue"><span>＋</span>Ajouter une recette</button></div></div>
+<h2 class="home-section-title">Ce mois-ci</h2>
+<div class="grid home-summary-grid"><div class="metric home-summary-metric"><span>Chiffre d’affaires</span><strong id="homeRevenue">0,00 €</strong></div><div class="metric home-summary-metric"><span>Dépenses</span><strong id="homeExpenses">0,00 €</strong></div><div class="metric home-summary-metric home-available"><span>Disponible estimé</span><strong id="homeAvailable">0,00 €</strong><small>Après dépenses et URSSAF estimée</small></div></div>
+<div class="card home-upcoming"><div class="today-heading"><h3>Prochaines courses</h3><button type="button" class="secondary" id="homeAllRides">Voir toutes</button></div><div id="homeUpcomingList" class="list"></div></div>
+<details class="card details-card"><summary>Statistiques détaillées et informations</summary>
 <div class="card"><label for="period">Période des indicateurs</label><select id="period"><option value="month">Ce mois-ci</option><option value="week">Cette semaine</option><option value="year">Cette année</option><option value="all">Depuis le début</option></select></div>
 <div class="grid">
 <div class="metric"><span>Chiffre d’affaires</span><strong id="kpiRevenue">0,00 €</strong><small>Courses enregistrées</small></div>
@@ -224,6 +245,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 </div>
 <div class="card" id="monthlyStats"><h3>Statistiques du mois</h3><div class="grid"><div class="metric"><span>Recettes du mois</span><strong id="monthRevenue">0,00 €</strong><small>Courses + recettes ajoutées</small></div><div class="metric"><span>Dépenses du mois</span><strong id="monthExpenses">0,00 €</strong><small>Frais enregistrés</small></div><div class="metric"><span>Résultat du mois</span><strong id="monthNet">0,00 €</strong><small>Avant cotisations et impôts</small></div><div class="metric"><span>URSSAF estimée du mois</span><strong id="monthUrssaf">0,00 €</strong><small>Estimation sur 21,3 % du CA</small></div><div class="metric"><span>Disponible estimé à te verser</span><strong id="monthAvailable">0,00 €</strong><small>Recettes − dépenses − URSSAF</small></div></div><h3>Comparaison avec le mois précédent</h3><div class="grid"><div class="metric"><span>CA du mois précédent</span><strong id="prevMonthRevenue">0,00 €</strong><small id="revenueChange">Évolution du CA</small></div><div class="metric"><span>Disponible du mois précédent</span><strong id="prevMonthAvailable">0,00 €</strong><small id="availableChange">Évolution du disponible</small></div></div><p class="note">Le disponible est une estimation : garde aussi une marge pour les impôts, les frais à venir et les imprévus. Il ne s’agit pas d’un salaire garanti.</p><h3>Récapitulatif par semaine</h3><div id="weeklyStats" class="list"></div></div>
 <div class="card"><h3>À savoir</h3><p class="note">Les chiffres sont calculés uniquement à partir des éléments saisis ici. L’URSSAF estimée utilise un taux indicatif de 21,3 % du CA (21,2 % de cotisations sociales + 0,1 % de contribution à la formation professionnelle). Le montant réel peut varier, notamment en cas d’ACRE ou d’option fiscale. Le « reste » ne déduit pas les impôts ni les frais non enregistrés. Les données sont enregistrées sur ton compte sécurisé lorsque le statut indique « Synchronisé dans le cloud ». Pense à exporter une sauvegarde de temps en temps.</p></div>
+</details>
 </section>
 <section class="panel" id="rides">
 <h2>Ajouter une course</h2>
@@ -370,8 +392,10 @@ period.addEventListener('change',render);
 function openQuickTab(id){showTab(id);const target={rides:'rideDuration',revenues:'revenueAmount',expenses:'expenseAmount',clients:'clientName',documents:'docType'}[id];if(target)setTimeout(()=>document.getElementById(target).focus(),80)}
 quickRide.addEventListener('click',()=>openQuickTab('rides'));
 quickExpense.addEventListener('click',()=>openQuickTab('expenses'));
-quickClient.addEventListener('click',()=>openQuickTab('clients'));
-quickDocument.addEventListener('click',()=>openQuickTab('documents'));
+if(quickClient)quickClient.addEventListener('click',()=>openQuickTab('clients'));
+if(quickDocument)quickDocument.addEventListener('click',()=>openQuickTab('documents'));
+quickRevenue.addEventListener('click',()=>openQuickTab('revenues'));
+homeAllRides.addEventListener('click',()=>showTab('rides'));
 function renderMonthlyStats(){
  const now=new Date(),y=now.getFullYear(),m=now.getMonth();
  const monthTotals=(year,month)=>{
@@ -381,6 +405,7 @@ function renderMonthlyStats(){
   return {r,ex,urssaf:r*0.213,available:r-ex-(r*0.213)};
  };
  const current=monthTotals(y,m),previousDate=new Date(y,m-1,1),previous=monthTotals(previousDate.getFullYear(),previousDate.getMonth());
+ homeRevenue.textContent=money(current.r);homeExpenses.textContent=money(current.ex);homeAvailable.textContent=money(current.available);
  monthRevenue.textContent=money(current.r);monthExpenses.textContent=money(current.ex);monthNet.textContent=money(current.r-current.ex);monthUrssaf.textContent=money(current.urssaf);monthAvailable.textContent=money(current.available);
  prevMonthRevenue.textContent=money(previous.r);prevMonthAvailable.textContent=money(previous.available);
  const changeLabel=(currentValue,previousValue)=>{const diff=currentValue-previousValue;if(previousValue===0)return diff===0?'Aucune évolution mesurable':'Nouveau chiffre par rapport au mois précédent';const pct=(diff/Math.abs(previousValue))*100;return (diff>0?'+':'')+money(diff)+' ('+(pct>0?'+':'')+pct.toLocaleString('fr-FR',{maximumFractionDigits:1})+' %) vs mois précédent'};
@@ -388,6 +413,14 @@ function renderMonthlyStats(){
  const first=new Date(y,m,1),last=new Date(y,m+1,0),weeks=[];
  for(let start=new Date(first);start<=last;){const end=new Date(start);end.setDate(end.getDate()+6);if(end>last)end.setTime(last.getTime());const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const from=fmt(start),to=fmt(end),match=d=>d>=from&&d<=to;const r=db.rides.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.price||0),0)+db.extraRevenues.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.amount||0),0);const ex=db.expenses.filter(x=>match(x.date)).reduce((sum,x)=>sum+Number(x.amount||0),0);weeks.push({from,to,r,ex});start=new Date(end);start.setDate(start.getDate()+1)}
  weeklyStats.innerHTML=weeks.map((w,i)=>'<div class="item"><div class="item-top"><div><strong>Semaine '+(i+1)+'</strong><div class="muted">Du '+fmtDate(w.from)+' au '+fmtDate(w.to)+'</div></div><div class="amount">'+money(w.r-w.ex)+'</div></div><div class="muted">Recettes : '+money(w.r)+' · Dépenses : '+money(w.ex)+'</div></div>').join('')||'<div class="empty">Aucune donnée pour ce mois.</div>';
+}
+function renderHomeUpcoming(){
+ const t=today();
+ const upcoming=db.rides.filter(r=>r.date>=t).slice().sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+ homeUpcomingList.innerHTML=upcoming.map(r=>{
+  const c=db.clients.find(x=>x.id===r.clientId);
+  return '<div class="item"><div class="item-top"><div><strong>'+esc(r.name||c?.name||'Course')+'</strong><div class="muted">'+fmtDate(r.date)+(r.from?' · '+esc(r.from):'')+(r.to?' → '+esc(r.to):'')+'</div></div><div class="amount">'+money(r.price)+'</div></div></div>';
+ }).join('')||'<div class="empty">Aucune course à venir enregistrée pour le moment.</div>';
 }
 function renderToday(){
  const brand=(db.settings.bizName||'Mon VTC').trim();welcomeBrand.textContent=brand.toLocaleUpperCase('fr-FR')+' · ESPACE CHAUFFEUR';
@@ -397,6 +430,7 @@ function renderToday(){
  todayCount.textContent=tr.length+' course'+(tr.length>1?'s':'')+' enregistrée'+(tr.length>1?'s':'');
  todayRideLabel.textContent=tr.length?('Reste après frais du jour : '+money(rev-cost)):'Vos premières courses apparaîtront ici';
  renderMonthlyStats();
+ renderHomeUpcoming();
  const d=new Date();welcomeTitle.textContent=(d.getHours()<12?'Bonjour 👋':d.getHours()<18?'Bon après-midi 👋':'Bonsoir 👋');
  welcomeDate.textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · Votre activité, en un coup d’œil';
 }
