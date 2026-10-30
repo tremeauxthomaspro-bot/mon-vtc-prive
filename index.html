@@ -291,13 +291,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#b68a4a;box-sh
 <h2>Créer un document</h2>
 <div class="card no-print">
 <label for="docType">Type de document</label><select id="docType"><option value="reservation">Bon de réservation VTC</option><option value="quote">Devis</option><option value="invoice">Facture</option></select>
-<div class="row"><div><label for="docClient">Client enregistré</label><select id="docClient"><option value="">Choisir un client…</option></select></div><div><label for="docDate">Date d’émission</label><input id="docDate" type="date" required></div></div>
-<div class="row"><div><label for="serviceDate">Date de prestation</label><input id="serviceDate" type="date"></div><div><label for="docBuyerId">N° TVA intracommunautaire du client (si applicable)</label><input id="docBuyerId"></div></div>
+<div><label for="docDate">Date d’émission</label><input id="docDate" type="date" required></div>
 <div id="reservationFields">
+<div class="row"><div><label for="reservationLastName">Nom du client</label><input id="reservationLastName" autocomplete="family-name" maxlength="120" placeholder="Nom"></div><div><label for="reservationFirstName">Prénom du client</label><input id="reservationFirstName" autocomplete="given-name" maxlength="120" placeholder="Prénom"></div></div>
+<div class="row"><div><label for="reservationPhone">Téléphone du client</label><input id="reservationPhone" type="tel" autocomplete="tel" maxlength="40" placeholder="06 00 00 00 00"></div><div><label for="reservationEmail">E-mail (facultatif)</label><input id="reservationEmail" type="email" autocomplete="email" maxlength="254" placeholder="nom@exemple.fr"></div></div>
+<div><label for="reservationAddress">Adresse du client (facultatif)</label><input id="reservationAddress" autocomplete="street-address" maxlength="300" placeholder="Adresse, code postal, ville"></div>
 <div class="row"><div><label for="bookedAt">Date/heure de réservation</label><input id="bookedAt" type="datetime-local"></div><div><label for="pickupAt">Prise en charge souhaitée</label><input id="pickupAt" type="datetime-local"></div></div>
 <div class="row"><div><label for="pickupPlace">Lieu de prise en charge</label><input id="pickupPlace" placeholder="Adresse complète" /></div><div><label for="dropPlace">Destination (facultatif)</label><input id="dropPlace" placeholder="Adresse / ville" /></div></div>
 </div>
 <div id="commercialFields">
+<div class="row"><div><label for="docClient">Client enregistré</label><select id="docClient"><option value="">Choisir un client…</option></select></div><div><label for="serviceDate">Date de prestation</label><input id="serviceDate" type="date"></div></div>
+<div class="row"><div><label for="docBuyerId">N° TVA intracommunautaire du client (si applicable)</label><input id="docBuyerId"></div></div>
 <label for="docTitle">Objet / prestation</label><input id="docTitle" placeholder="Ex. Mise à disposition / trajet privé">
 <div class="row"><div><label for="docQty">Quantité</label><input id="docQty" type="number" min="1" step="1" value="1"></div><div><label for="docPrice">Prix unitaire (€)</label><input id="docPrice" type="number" min="0" step="0.01" placeholder="50,00"></div></div>
 <label for="docDetails">Détail / conditions</label><textarea id="docDetails" placeholder="Détail de la prestation, attente, bagages, conditions…"></textarea>
@@ -494,10 +498,12 @@ function docHtml(d){
 }
 function createDocument(){
  const type=docType.value,c=db.clients.find(c=>c.id===docClient.value)||null;
+ const reservationClientName=(document.getElementById('reservationFirstName').value.trim()+' '+document.getElementById('reservationLastName').value.trim()).trim();
+ const reservationPhone=document.getElementById('reservationPhone').value.trim();
  if(!db.settings.bizName||!db.settings.bizSiren||!db.settings.bizRevtc){if(!confirm('Tes informations professionnelles (nom, SIREN et REVTC) ne sont pas toutes renseignées. Générer quand même un brouillon ?'))return}
- if(type==='reservation'&&(!c?.phone||!bookedAt.value||!pickupAt.value||!pickupPlace.value)){alert('Pour un bon de réservation, renseigne le client et son téléphone, la date/heure de réservation, l’heure souhaitée et le lieu de prise en charge.');return}
+ if(type==='reservation'&&(!document.getElementById('reservationLastName').value.trim()||!document.getElementById('reservationFirstName').value.trim()||!reservationPhone||!bookedAt.value||!pickupAt.value||!pickupPlace.value.trim())){alert('Pour un bon de réservation, renseigne le nom, le prénom, le téléphone du client, la date/heure de réservation, l’heure souhaitée et le lieu de prise en charge.');return}
  if(type!=='reservation'&&(!c||!docTitle.value.trim()||docPrice.value==='')){alert('Choisis un client, une prestation et un prix.');return}
- const d={id:uid(),type,typeLabel:type==='reservation'?'Bon de réservation':type==='quote'?'Devis':'Facture',number:nextNumber(type),date:docDate.value||today(),created:new Date().toISOString(),clientId:c?.id||'',clientName:c?.name||'',clientPhone:c?.phone||'',clientEmail:c?.email||'',clientAddress:c?.address||'',bookedAt:bookedAt.value,pickupAt:pickupAt.value,pickupPlace:pickupPlace.value.trim(),dropPlace:dropPlace.value.trim(),title:docTitle.value.trim(),details:docDetails.value.trim(),qty:Number(docQty.value)||1,unitPrice:Number(docPrice.value)||0,vatRate:Number(docVat.value)||0,due:docDue.value,payment:docPayment.value,reference:docRef.value.trim()};
+ const d={id:uid(),type,typeLabel:type==='reservation'?'Bon de réservation':type==='quote'?'Devis':'Facture',number:nextNumber(type),date:docDate.value||today(),created:new Date().toISOString(),clientId:type==='reservation'?'':(c?.id||''),clientName:type==='reservation'?reservationClientName:(c?.name||''),clientPhone:type==='reservation'?reservationPhone:(c?.phone||''),clientEmail:type==='reservation'?document.getElementById('reservationEmail').value.trim():(c?.email||''),clientAddress:type==='reservation'?document.getElementById('reservationAddress').value.trim():(c?.address||''),bookedAt:bookedAt.value,pickupAt:pickupAt.value,pickupPlace:pickupPlace.value.trim(),dropPlace:dropPlace.value.trim(),title:docTitle.value.trim(),details:docDetails.value.trim(),qty:Number(docQty.value)||1,unitPrice:Number(docPrice.value)||0,vatRate:Number(docVat.value)||0,due:docDue.value,payment:docPayment.value,reference:docRef.value.trim()};
  d.totalHT=d.qty*d.unitPrice;d.vatAmount=d.totalHT*d.vatRate/100;d.totalTTC=d.totalHT+d.vatAmount;
  db.documents.push(d);save();displayDoc(d);alert('Document créé. Vérifie les informations, puis utilise « Imprimer / Enregistrer en PDF ».');
 }
