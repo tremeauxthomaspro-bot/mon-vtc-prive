@@ -123,7 +123,7 @@ async function updateFarePreview() {
   }
   const requestId = ++routeRequestId;
   farePreview.style.display = "block";
-  farePreview.innerHTML = "<strong>Calcul du trajet…</strong> Recherche de la distance et du tarif estimé.";
+  farePreview.textContent = "Calcul de la distance routière…";
   try {
     const response = await fetch(SUPABASE_URL + "/functions/v1/calculate-vtc-route", {
       method: "POST",
@@ -133,14 +133,10 @@ async function updateFarePreview() {
     const result = await response.json().catch(() => ({}));
     if (requestId !== routeRequestId) return;
     if (!response.ok || !result.ok) throw new Error(result.error || "Calcul indisponible");
-    if (result.requires_manual_confirmation || result.distance_km > 100) {
-      farePreview.innerHTML = "<strong>Demande particulière — trajet de plus de 100 km</strong>Distance estimée : " + result.distance_km + " km. Le tarif sera étudié et confirmé manuellement par le chauffeur. Aucun prix automatique ne sera affiché pour ce trajet.";
-    } else {
-      farePreview.innerHTML = "<strong>Estimation de votre course</strong><div class='price'>" + Number(result.estimated_price).toFixed(2).replace(".", ",") + " €</div>Distance estimée : " + result.distance_km + " km.<br>Tarif indicatif, à confirmer par le chauffeur.";
-    }
+    farePreview.innerHTML = "<strong>Distance routière estimée : " + result.distance_km + " km</strong><br>Le chauffeur vous communiquera son tarif après réception de votre demande.";
   } catch (error) {
     if (requestId !== routeRequestId) return;
-    farePreview.innerHTML = "<strong>Tarif non disponible pour le moment</strong>Vérifiez les adresses (avec ville ou code postal). Le chauffeur pourra confirmer le tarif après réception de la demande.";
+    farePreview.textContent = "Distance indisponible pour le moment. Vous pouvez quand même envoyer votre demande.";
   }
 }
 pickupInput.addEventListener("change", updateFarePreview);
@@ -179,14 +175,7 @@ form.addEventListener("submit", async (event) => {
     if (!response.ok || !result.ok) throw new Error(result.error || "L'envoi a échoué. Réessayez.");
     form.reset();
     dateInput.min = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
-    const quote = result.route;
-    let confirmation = "Votre demande a bien été envoyée. Elle reste en attente jusqu'à confirmation du chauffeur.";
-    if (quote && quote.estimated_price !== null && quote.estimated_price !== undefined) {
-      confirmation += " Estimation automatique : " + quote.estimated_price + " € (à confirmer par le chauffeur).";
-    } else if (quote && quote.requires_manual_confirmation) {
-      confirmation += " Ce trajet nécessite un tarif confirmé manuellement par le chauffeur.";
-    }
-    showStatus(confirmation, "ok");
+    showStatus("Votre demande a bien été envoyée. Le chauffeur étudiera votre trajet et vous transmettra son tarif pour validation.", "ok");
   } catch (error) {
     showStatus(error.message || "Impossible d'envoyer la demande pour le moment.", "err");
   } finally {
